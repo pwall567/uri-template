@@ -105,7 +105,7 @@ class URITemplateTest {
                     expect("(prefix)") { text }
                 }
                 with(this[1]) {
-                    assertIs<ExpressionElement>(this)
+                    assertIs<VariableElement>(this)
                     expect("var") { name }
                 }
                 with(this[2]) {
@@ -160,7 +160,7 @@ class URITemplateTest {
 
     @Test fun `should throw exception on empty expression`() {
         assertFailsWith<URITemplateException> { URITemplate.parse("(prefix){}(suffix)") }.let {
-            expect("Expression is empty at offset 9") { it.message }
+            expect("Variable name is empty at offset 9") { it.message }
         }
     }
 
@@ -188,7 +188,7 @@ class URITemplateTest {
                     expect("(prefix)") { text }
                 }
                 with(this[1]) {
-                    assertIs<ExpressionElement>(this)
+                    assertIs<VariableElement>(this)
                     expect("var") { name }
                 }
                 with(this[2]) {
@@ -212,13 +212,98 @@ class URITemplateTest {
         assertNull(uriTemplate["var"])
     }
 
+    @Test fun `should create template with reserved variable`() {
+        val uriTemplate = URITemplate.parse("(prefix){+var}(suffix)")
+        with(uriTemplate) {
+            with(elements) {
+                expect(3) { size }
+                with(this[0]) {
+                    assertIs<TextElement>(this)
+                    expect("(prefix)") { text }
+                }
+                with(this[1]) {
+                    assertIs<ReservedElement>(this)
+                    expect("var") { name }
+                }
+                with(this[2]) {
+                    assertIs<TextElement>(this)
+                    expect("(suffix)") { text }
+                }
+            }
+            with(variables) {
+                expect(1) { size }
+                expect(Variable("var", null)) { this[0] }
+            }
+        }
+        assertTrue("var" in uriTemplate)
+        assertFalse("xxx" in uriTemplate)
+    }
+
+    @Test fun `should expand template with reserved variable`() {
+        val uriTemplate = URITemplate.parse("(prefix){+var}(suffix)")
+        uriTemplate["var"] = "/abc/def"
+        expect("(prefix)/abc/def(suffix)") { uriTemplate.toString() }
+        expect("/abc/def") { uriTemplate["var"] }
+    }
+
+    @Test fun `should create template with fragment variable`() {
+        val uriTemplate = URITemplate.parse("(prefix){#var}(suffix)")
+        with(uriTemplate) {
+            with(elements) {
+                expect(3) { size }
+                with(this[0]) {
+                    assertIs<TextElement>(this)
+                    expect("(prefix)") { text }
+                }
+                with(this[1]) {
+                    assertIs<FragmentElement>(this)
+                    expect("var") { name }
+                }
+                with(this[2]) {
+                    assertIs<TextElement>(this)
+                    expect("(suffix)") { text }
+                }
+            }
+            with(variables) {
+                expect(1) { size }
+                expect(Variable("var", null)) { this[0] }
+            }
+        }
+        assertTrue("var" in uriTemplate)
+        assertFalse("xxx" in uriTemplate)
+    }
+
+    @Test fun `should expand template with fragment variable`() {
+        val uriTemplate = URITemplate.parse("(prefix){#var}(suffix)")
+        uriTemplate["var"] = "abc$"
+        expect("(prefix)#abc$(suffix)") { uriTemplate.toString() }
+        expect("abc$") { uriTemplate["var"] }
+    }
+
     @Test fun `should perform substitutions listed in specification for Level 1`() {
-        val uriTemplate1 = URITemplate.parse("{var}")
-        uriTemplate1["var"] = "value"
+        val uriTemplate1 = URITemplate.parse("{var}").apply {
+            this["var"] = "value"
+        }
         expect("value") { uriTemplate1.toString() }
-        val uriTemplate2 = URITemplate.parse("{hello}")
-        uriTemplate2["hello"] = "Hello World!"
+        val uriTemplate2 = URITemplate.parse("{hello}").apply {
+            this["hello"] = "Hello World!"
+        }
         expect("Hello%20World%21") { uriTemplate2.toString() }
+    }
+
+    @Test fun `should perform substitutions listed in specification for Level 2`() {
+        val uriTemplate1 = URITemplate.parse("{+var}").apply {
+            this["var"] = "value"
+        }
+        expect("value") { uriTemplate1.toString() }
+        val uriTemplate2 = URITemplate.parse("{+hello}").apply {
+            this["hello"] = "Hello World!"
+        }
+        expect("Hello%20World!") { uriTemplate2.toString() }
+        val uriTemplate3 = URITemplate.parse("{+path}/here").apply {
+            this["path"] = "/foo/bar"
+        }
+        expect("/foo/bar/here") { uriTemplate3.toString() }
     }
 
 }

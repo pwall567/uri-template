@@ -34,6 +34,8 @@ import net.pwall.text.TextMatcher
  */
 class URITemplate private constructor(val elements: List<Element>, val variables: List<Variable>) {
 
+    enum class EncodingType { NORMAL, RESERVED, FRAGMENT }
+
     override fun toString(): String = buildString {
         for (element in elements)
             element.appendTo(this, variables)
@@ -79,9 +81,13 @@ class URITemplate private constructor(val elements: List<Element>, val variables
             return URITemplate(elements, variables)
         }
 
-        private fun parseExpression(tm: TextMatcher, variables: MutableList<Variable>): ExpressionElement {
+        private fun parseExpression(tm: TextMatcher, variables: MutableList<Variable>): Element {
 
-            // TODO parse operator
+            val encodingType: EncodingType = when {
+                tm.match('+') -> EncodingType.RESERVED
+                tm.match('#') -> EncodingType.FRAGMENT
+                else -> EncodingType.NORMAL
+            }
 
             val sb = StringBuilder()
             while (!tm.isAtEnd) {
@@ -91,11 +97,15 @@ class URITemplate private constructor(val elements: List<Element>, val variables
 
                     tm.match('}') -> {
                         if (sb.isEmpty())
-                            throw URITemplateException("Expression is empty", tm.apply { index-- })
+                            throw URITemplateException("Variable name is empty", tm.apply { index-- })
                         val name = sb.toString()
                         if (variables.none { it.name == name })
                             variables.add(Variable(name, null))
-                        return ExpressionElement(name)
+                        return when (encodingType) {
+                            EncodingType.NORMAL -> VariableElement(name)
+                            EncodingType.RESERVED -> ReservedElement(name)
+                            EncodingType.FRAGMENT -> FragmentElement(name)
+                        }
                     }
                     tm.match('%') -> tm.processPercent(sb)
                     tm.match(::isValidVariableCharacter) -> sb.append(tm.resultChar)

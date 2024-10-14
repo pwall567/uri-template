@@ -69,8 +69,9 @@ of the substitutions performed.
 ## Level 2
 
 The specification describes a "Level 2", adding operator characters which modify the expansion of the variables.
+See [Section 1.2](https://www.rfc-editor.org/rfc/rfc6570.html#section-1.2) of the specification for more details.
 
-The `uri-template` library does not currently support this level.
+Version 2.0 (and later) of the `uri-template` library supports this level.
 
 ## Level 3
 
@@ -86,23 +87,23 @@ The `uri-template` library does not currently support this level.
 
 ## Dependency Specification
 
-The latest version of the library is 1.0, and it may be obtained from the Maven Central repository.
+The latest version of the library is 2.0, and it may be obtained from the Maven Central repository.
 
 ### Maven
 ```xml
     <dependency>
       <groupId>io.kjson</groupId>
       <artifactId>uri-template</artifactId>
-      <version>1.0</version>
+      <version>2.0</version>
     </dependency>
 ```
 ### Gradle
 ```groovy
-    implementation 'io.kjson:uri-template:1.0'
+    implementation 'io.kjson:uri-template:2.0'
 ```
 ### Gradle (kts)
 ```kotlin
-    implementation("io.kjson:uri-template:1.0")
+    implementation("io.kjson:uri-template:2.0")
 ```
 
 Peter Wall
