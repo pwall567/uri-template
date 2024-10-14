@@ -1,5 +1,5 @@
 /*
- * @(#) VariableElement.kt
+ * @(#) QueryContinuationElement.kt
  *
  * uri-template  Kotlin implementation of URI Template
  * Copyright (c) 2024 Peter Wall
@@ -25,19 +25,18 @@
 
 package io.kjson.uri
 
-import io.kjson.uri.Element.Companion.encodeNormal
+import io.kjson.uri.Element.Companion.encodeReserved
 import net.pwall.text.UTF8StringMapper.encodeUTF8
 
-class VariableElement(val names: List<String>) : Element {
+class QueryContinuationElement(val names: List<String>) : Element {
 
     override fun appendTo(a: Appendable, variables: List<Variable>) {
-        var continuation = false
         for (name in names) {
+            a.append('&')
+            a.append(name)
+            a.append('=')
             variables.find { it.name == name }?.value?.let {
-                if (continuation)
-                    a.append(',')
-                a.append(it.toString().encodeUTF8().encodeNormal())
-                continuation = true
+                a.append(it.toString().encodeUTF8().encodeReserved())
             }
         }
     }

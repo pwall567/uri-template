@@ -87,25 +87,25 @@ The `uri-template` library does not currently support this level.
 
 ## Dependency Specification
 
-The latest version of the library is 2.0, and it may be obtained from the Maven Central repository.
+The latest version of the library is 3.0, and it may be obtained from the Maven Central repository.
 
 ### Maven
 ```xml
     <dependency>
       <groupId>io.kjson</groupId>
       <artifactId>uri-template</artifactId>
-      <version>2.0</version>
+      <version>3.0</version>
     </dependency>
 ```
 ### Gradle
 ```groovy
-    implementation 'io.kjson:uri-template:2.0'
+    implementation 'io.kjson:uri-template:3.0'
 ```
 ### Gradle (kts)
 ```kotlin
-    implementation("io.kjson:uri-template:2.0")
+    implementation("io.kjson:uri-template:3.0")
 ```
 
 Peter Wall
 
-2024-10-14
+2024-10-15

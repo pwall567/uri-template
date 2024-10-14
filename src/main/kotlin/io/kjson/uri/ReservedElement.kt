@@ -28,10 +28,18 @@ package io.kjson.uri
 import io.kjson.uri.Element.Companion.encodeReserved
 import net.pwall.text.UTF8StringMapper.encodeUTF8
 
-class ReservedElement(val name: String) : Element {
+class ReservedElement(val names: List<String>) : Element {
 
     override fun appendTo(a: Appendable, variables: List<Variable>) {
-        variables.find { it.name == name }?.value?.let { a.append(it.toString().encodeUTF8().encodeReserved()) }
+        var continuation = false
+        for (name in names) {
+            variables.find { it.name == name }?.value?.let {
+                if (continuation)
+                    a.append(',')
+                a.append(it.toString().encodeUTF8().encodeReserved())
+                continuation = true
+            }
+        }
     }
 
 }

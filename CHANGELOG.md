@@ -2,9 +2,19 @@
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
-## [2.0] - 2024-10-14
+## [3.0] - 2024-10-15
+### Added
+- `DotPrefixedElement`, `SlashPrefixedElement`, `SemicolonPrefixedElement`, `QueryElement`, `QueryContinuationElement`
 ### Changed
-- `ExpressionElement`, `URITemplate`: added support for specification level 2
+- `URITemplate`, `VariableElement`, `ReservedElement`, `FragmentElement`: added support for specification level 3
+
+## [2.0] - 2024-10-14
+### Added
+- `VariableElement`, `ReservedElement`, `FragmentElement`
+### Removed
+- `ExpressionElement`
+### Changed
+- `URITemplate`, `Element`: added support for specification level 2
 
 ## [1.0] - 2024-10-14
 ### Added
