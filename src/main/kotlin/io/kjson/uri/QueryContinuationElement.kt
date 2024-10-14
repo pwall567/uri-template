@@ -1,5 +1,5 @@
 /*
- * @(#) Element.kt
+ * @(#) QueryContinuationElement.kt
  *
  * uri-template  Kotlin implementation of URI Template
  * Copyright (c) 2024 Peter Wall
@@ -25,32 +25,21 @@
 
 package io.kjson.uri
 
-import net.pwall.text.StringMapper.mapCharacters
-import net.pwall.text.URIStringMapper.isUnreservedForURI
-import net.pwall.util.IntOutput.append2Hex
+import io.kjson.uri.Element.Companion.encodeReserved
+import net.pwall.text.UTF8StringMapper.encodeUTF8
 
-sealed interface Element {
 
-    fun appendTo(a: Appendable, variables: List<Variable>)
+class QueryContinuationElement(val names: List<String>) : Element {
 
-    companion object {
-
-        fun String.encodeNormal(): String = mapCharacters {
-            if (it.isUnreservedForURI()) null else StringBuilder(3).apply {
-                append('%')
-                append2Hex(this, it.code)
+    override fun appendTo(a: Appendable, variables: List<Variable>) {
+        for (name in names) {
+            a.append('&')
+            a.append(name)
+            a.append('=')
+            variables.find { it.name == name }?.value?.let {
+                a.append(it.toString().encodeUTF8().encodeReserved())
             }
         }
-
-        fun String.encodeReserved(): String = mapCharacters {
-            if (it.isUnreservedForURI() || it.isReserved()) null else StringBuilder(3).apply {
-                append('%')
-                append2Hex(this, it.code)
-            }
-        }
-
-        private fun Char.isReserved(): Boolean = this in ":/?#[]@!$&'()*+,;="
-
     }
 
 }

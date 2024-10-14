@@ -1,5 +1,5 @@
 /*
- * @(#) ExpressionElement.kt
+ * @(#) ReservedElement.kt
  *
  * uri-template  Kotlin implementation of URI Template
  * Copyright (c) 2024 Peter Wall
@@ -25,13 +25,22 @@
 
 package io.kjson.uri
 
-import net.pwall.text.URIStringMapper.encodeURI
+import io.kjson.uri.Element.Companion.encodeReserved
 import net.pwall.text.UTF8StringMapper.encodeUTF8
 
-class ExpressionElement(val name: String) : Element {
+
+class ReservedElement(val names: List<String>) : Element {
 
     override fun appendTo(a: Appendable, variables: List<Variable>) {
-        variables.find { it.name == name }?.value?.let { a.append(it.toString().encodeUTF8().encodeURI()) }
+        var continuation = false
+        for (name in names) {
+            variables.find { it.name == name }?.value?.let {
+                if (continuation)
+                    a.append(',')
+                a.append(it.toString().encodeUTF8().encodeReserved())
+                continuation = true
+            }
+        }
     }
 
 }

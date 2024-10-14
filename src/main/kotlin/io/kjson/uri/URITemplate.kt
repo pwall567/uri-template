@@ -34,6 +34,9 @@ import net.pwall.text.TextMatcher
  */
 class URITemplate private constructor(val elements: List<Element>, val variables: List<Variable>) {
 
+    enum class EncodingType { NORMAL, RESERVED, FRAGMENT, DOT_PREFIXED, SLASH_PREFIXED, SEMICOLON_PREFIXED, QUERY,
+            QUERY_CONTINUATION }
+
     override fun toString(): String = buildString {
         for (element in elements)
             element.appendTo(this, variables)
@@ -79,23 +82,53 @@ class URITemplate private constructor(val elements: List<Element>, val variables
             return URITemplate(elements, variables)
         }
 
-        private fun parseExpression(tm: TextMatcher, variables: MutableList<Variable>): ExpressionElement {
+        private fun parseExpression(tm: TextMatcher, variables: MutableList<Variable>): Element {
 
             // TODO parse operator
+            val encodingType: EncodingType = when {
+                tm.match('+') -> EncodingType.RESERVED
+                tm.match('#') -> EncodingType.FRAGMENT
+                tm.match('.') -> EncodingType.DOT_PREFIXED
+                tm.match('/') -> EncodingType.SLASH_PREFIXED
+                tm.match(';') -> EncodingType.SEMICOLON_PREFIXED
+                tm.match('?') -> EncodingType.QUERY
+                tm.match('&') -> EncodingType.QUERY_CONTINUATION
+                else -> EncodingType.NORMAL
+            }
 
+            val names = mutableListOf<String>()
             val sb = StringBuilder()
             while (!tm.isAtEnd) {
                 when {
 
                     // TODO parse modifier
 
-                    tm.match('}') -> {
+                    tm.match(',') -> {
                         if (sb.isEmpty())
-                            throw URITemplateException("Expression is empty", tm.apply { index-- })
+                            throw URITemplateException("Variable name is empty", tm.apply { index-- })
                         val name = sb.toString()
                         if (variables.none { it.name == name })
                             variables.add(Variable(name, null))
-                        return ExpressionElement(name)
+                        names.add(name)
+                        sb.setLength(0)
+                    }
+                    tm.match('}') -> {
+                        if (sb.isEmpty())
+                            throw URITemplateException("Variable name is empty", tm.apply { index-- })
+                        val name = sb.toString()
+                        if (variables.none { it.name == name })
+                            variables.add(Variable(name, null))
+                        names.add(name)
+                        return when (encodingType) {
+                            EncodingType.NORMAL -> VariableElement(names)
+                            EncodingType.RESERVED -> ReservedElement(names)
+                            EncodingType.FRAGMENT -> FragmentElement(names)
+                            EncodingType.DOT_PREFIXED -> DotPrefixedElement(names)
+                            EncodingType.SLASH_PREFIXED -> SlashPrefixedElement(names)
+                            EncodingType.SEMICOLON_PREFIXED -> SemicolonPrefixedElement(names)
+                            EncodingType.QUERY -> QueryElement(names)
+                            EncodingType.QUERY_CONTINUATION -> QueryContinuationElement(names)
+                        }
                     }
                     tm.match('%') -> tm.processPercent(sb)
                     tm.match(::isValidVariableCharacter) -> sb.append(tm.resultChar)
