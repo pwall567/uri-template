@@ -75,13 +75,13 @@ Version 2.0 (and later) of the `uri-template` library supports this level.
 
 ## Level 3
 
-"Level 3" of the specification adds further modifying operators, as well as allowing multiple variables in expression.
+"Level 3" of the specification adds further modifying operators, as well as allowing multiple variables in expressions.
 
-The `uri-template` library does not currently support this level.
+Version 3.0 (and later) of the `uri-template` library supports this level.
 
 ## Level 4
 
-"Level 4" of the specification adds the concept of a variable suffix modifier,  
+"Level 4" of the specification adds the concept of a variable modifier as a suffix on each variable.  
 
 The `uri-template` library does not currently support this level.
 
