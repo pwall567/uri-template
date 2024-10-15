@@ -34,9 +34,6 @@ import net.pwall.text.TextMatcher
  */
 class URITemplate private constructor(val elements: List<Element>, val variables: List<Variable>) {
 
-    enum class EncodingType { SIMPLE, RESERVED, FRAGMENT, DOT_PREFIXED, SLASH_PREFIXED, SEMICOLON_PREFIXED, QUERY,
-            QUERY_CONTINUATION }
-
     override fun toString(): String = buildString {
         for (element in elements)
             element.appendTo(this, variables)
@@ -61,6 +58,17 @@ class URITemplate private constructor(val elements: List<Element>, val variables
             throw URITemplateException("Variable not recognised - $name")
 
     companion object {
+
+        private const val RESERVED_STRING_EXPANSION = '+'
+        private const val FRAGMENT_EXPANSION = '#'
+        private const val LABEL_EXPANSION = '.'
+        private const val PATH_SEGMENT_EXPANSION = '/'
+        private const val PATH_PARAMETER_EXPANSION = ';'
+        private const val QUERY_EXPANSION = '?'
+        private const val QUERY_CONTINUATION_EXPANSION = '&'
+
+        private val expansionTypes = charArrayOf(RESERVED_STRING_EXPANSION, FRAGMENT_EXPANSION, LABEL_EXPANSION,
+                PATH_SEGMENT_EXPANSION, PATH_PARAMETER_EXPANSION, QUERY_EXPANSION, QUERY_CONTINUATION_EXPANSION)
 
         fun parse(string: String): URITemplate {
             val elements = mutableListOf<Element>()
@@ -87,17 +95,7 @@ class URITemplate private constructor(val elements: List<Element>, val variables
 
         private fun parseExpression(tm: TextMatcher, variables: MutableList<Variable>): Element {
 
-            val encodingType: EncodingType = when {
-                tm.match('+') -> EncodingType.RESERVED
-                tm.match('#') -> EncodingType.FRAGMENT
-                tm.match('.') -> EncodingType.DOT_PREFIXED
-                tm.match('/') -> EncodingType.SLASH_PREFIXED
-                tm.match(';') -> EncodingType.SEMICOLON_PREFIXED
-                tm.match('?') -> EncodingType.QUERY
-                tm.match('&') -> EncodingType.QUERY_CONTINUATION
-                else -> EncodingType.SIMPLE
-            }
-
+            val encodingTypeChar = if (tm.match { it in expansionTypes }) tm.resultChar else ' '
             val names = mutableListOf<String>()
             var variableStart = tm.index
             while (!tm.isAtEnd) {
@@ -111,15 +109,15 @@ class URITemplate private constructor(val elements: List<Element>, val variables
                     }
                     tm.match('}') -> {
                         storeVariable(tm, variableStart, variables, names)
-                        return when (encodingType) {
-                            EncodingType.SIMPLE -> SimpleElement(names)
-                            EncodingType.RESERVED -> ReservedElement(names)
-                            EncodingType.FRAGMENT -> FragmentElement(names)
-                            EncodingType.DOT_PREFIXED -> DotPrefixedElement(names)
-                            EncodingType.SLASH_PREFIXED -> SlashPrefixedElement(names)
-                            EncodingType.SEMICOLON_PREFIXED -> SemicolonPrefixedElement(names)
-                            EncodingType.QUERY -> QueryElement(names)
-                            EncodingType.QUERY_CONTINUATION -> QueryContinuationElement(names)
+                        return when (encodingTypeChar) {
+                            RESERVED_STRING_EXPANSION -> ReservedElement(names)
+                            FRAGMENT_EXPANSION -> FragmentElement(names)
+                            LABEL_EXPANSION -> DotPrefixedElement(names)
+                            PATH_SEGMENT_EXPANSION -> SlashPrefixedElement(names)
+                            PATH_PARAMETER_EXPANSION -> SemicolonPrefixedElement(names)
+                            QUERY_EXPANSION -> QueryElement(names)
+                            QUERY_CONTINUATION_EXPANSION -> QueryContinuationElement(names)
+                            else -> SimpleElement(names)
                         }
                     }
                     tm.match('.') -> {
