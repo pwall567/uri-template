@@ -105,11 +105,16 @@ class URITemplateTest {
                     expect("(prefix)") { text }
                 }
                 with(this[1]) {
-                    assertIs<SimpleElement>(this)
+                    assertIs<ExpressionElement>(this)
                     with(names) {
                         expect(1) { size }
                         expect("var") { this[0] }
                     }
+                    assertFalse(reservedEncoding)
+                    assertNull(prefix)
+                    expect(',') { separator }
+                    assertFalse(addVariableNames)
+                    assertFalse(formsStyleEqualsSign)
                 }
                 with(this[2]) {
                     assertIs<TextElement>(this)
@@ -220,11 +225,16 @@ class URITemplateTest {
                     expect("(prefix)") { text }
                 }
                 with(this[1]) {
-                    assertIs<SimpleElement>(this)
+                    assertIs<ExpressionElement>(this)
                     with(names) {
                         expect(1) { size }
                         expect("var") { this[0] }
                     }
+                    assertFalse(reservedEncoding)
+                    assertNull(prefix)
+                    expect(',') { separator }
+                    assertFalse(addVariableNames)
+                    assertFalse(formsStyleEqualsSign)
                 }
                 with(this[2]) {
                     assertIs<TextElement>(this)
@@ -257,8 +267,16 @@ class URITemplateTest {
                     expect("(prefix)") { text }
                 }
                 with(this[1]) {
-                    assertIs<ReservedElement>(this)
-                    expect(listOf("var")) { names }
+                    assertIs<ExpressionElement>(this)
+                    with(names) {
+                        expect(1) { size }
+                        expect("var") { this[0] }
+                    }
+                    assertTrue(reservedEncoding)
+                    assertNull(prefix)
+                    expect(',') { separator }
+                    assertFalse(addVariableNames)
+                    assertFalse(formsStyleEqualsSign)
                 }
                 with(this[2]) {
                     assertIs<TextElement>(this)
@@ -291,8 +309,16 @@ class URITemplateTest {
                     expect("(prefix)") { text }
                 }
                 with(this[1]) {
-                    assertIs<FragmentElement>(this)
-                    expect(listOf("var")) { names }
+                    assertIs<ExpressionElement>(this)
+                    with(names) {
+                        expect(1) { size }
+                        expect("var") { this[0] }
+                    }
+                    assertTrue(reservedEncoding)
+                    expect('#') { prefix }
+                    expect(',') { separator }
+                    assertFalse(addVariableNames)
+                    assertFalse(formsStyleEqualsSign)
                 }
                 with(this[2]) {
                     assertIs<TextElement>(this)
@@ -325,12 +351,17 @@ class URITemplateTest {
                     expect("(prefix)") { text }
                 }
                 with(this[1]) {
-                    assertIs<SimpleElement>(this)
+                    assertIs<ExpressionElement>(this)
                     with(names) {
                         expect(2) { size }
                         expect("var1") { this[0] }
                         expect("var2") { this[1] }
                     }
+                    assertFalse(reservedEncoding)
+                    assertNull(prefix)
+                    expect(',') { separator }
+                    assertFalse(addVariableNames)
+                    assertFalse(formsStyleEqualsSign)
                 }
                 with(this[2]) {
                     assertIs<TextElement>(this)

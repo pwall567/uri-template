@@ -67,9 +67,6 @@ class URITemplate private constructor(val elements: List<Element>, val variables
         private const val QUERY_EXPANSION = '?'
         private const val QUERY_CONTINUATION_EXPANSION = '&'
 
-        private val expansionTypes = charArrayOf(RESERVED_STRING_EXPANSION, FRAGMENT_EXPANSION, LABEL_EXPANSION,
-                PATH_SEGMENT_EXPANSION, PATH_PARAMETER_EXPANSION, QUERY_EXPANSION, QUERY_CONTINUATION_EXPANSION)
-
         fun parse(string: String): URITemplate {
             val elements = mutableListOf<Element>()
             val variables = mutableListOf<Variable>()
@@ -93,9 +90,70 @@ class URITemplate private constructor(val elements: List<Element>, val variables
             return URITemplate(elements, variables)
         }
 
-        private fun parseExpression(tm: TextMatcher, variables: MutableList<Variable>): Element {
-
-            val encodingTypeChar = if (tm.match { it in expansionTypes }) tm.resultChar else ' '
+        private fun parseExpression(tm: TextMatcher, variables: MutableList<Variable>): ExpressionElement {
+            val prefix: Char?
+            val separator: Char
+            val reservedEncoding: Boolean
+            val addVariableNames: Boolean
+            val formsStyleEqualsSign: Boolean
+            when {
+                tm.match(RESERVED_STRING_EXPANSION) -> {
+                    prefix = null
+                    separator = ','
+                    reservedEncoding = true
+                    addVariableNames = false
+                    formsStyleEqualsSign = false
+                }
+                tm.match(FRAGMENT_EXPANSION) -> {
+                    prefix = '#'
+                    separator = ','
+                    reservedEncoding = true
+                    addVariableNames = false
+                    formsStyleEqualsSign = false
+                }
+                tm.match(LABEL_EXPANSION) -> {
+                    prefix = '.'
+                    separator = '.'
+                    reservedEncoding = false
+                    addVariableNames = false
+                    formsStyleEqualsSign = false
+                }
+                tm.match(PATH_SEGMENT_EXPANSION) -> {
+                    prefix = '/'
+                    separator = '/'
+                    reservedEncoding = false
+                    addVariableNames = false
+                    formsStyleEqualsSign = false
+                }
+                tm.match(PATH_PARAMETER_EXPANSION) -> {
+                    prefix = ';'
+                    separator = ';'
+                    reservedEncoding = false
+                    addVariableNames = true
+                    formsStyleEqualsSign = false
+                }
+                tm.match(QUERY_EXPANSION) -> {
+                    prefix = '?'
+                    separator = '&'
+                    reservedEncoding = false
+                    addVariableNames = true
+                    formsStyleEqualsSign = true
+                }
+                tm.match(QUERY_CONTINUATION_EXPANSION) -> {
+                    prefix = '&'
+                    separator = '&'
+                    reservedEncoding = false
+                    addVariableNames = true
+                    formsStyleEqualsSign = true
+                }
+                else -> {
+                    prefix = null
+                    separator = ','
+                    reservedEncoding = false
+                    addVariableNames = false
+                    formsStyleEqualsSign = false
+                }
+            }
             val names = mutableListOf<String>()
             var variableStart = tm.index
             while (!tm.isAtEnd) {
@@ -109,16 +167,8 @@ class URITemplate private constructor(val elements: List<Element>, val variables
                     }
                     tm.match('}') -> {
                         storeVariable(tm, variableStart, variables, names)
-                        return when (encodingTypeChar) {
-                            RESERVED_STRING_EXPANSION -> ReservedElement(names)
-                            FRAGMENT_EXPANSION -> FragmentElement(names)
-                            LABEL_EXPANSION -> DotPrefixedElement(names)
-                            PATH_SEGMENT_EXPANSION -> SlashPrefixedElement(names)
-                            PATH_PARAMETER_EXPANSION -> SemicolonPrefixedElement(names)
-                            QUERY_EXPANSION -> QueryElement(names)
-                            QUERY_CONTINUATION_EXPANSION -> QueryContinuationElement(names)
-                            else -> SimpleElement(names)
-                        }
+                        return ExpressionElement(names, prefix, separator, reservedEncoding, addVariableNames,
+                                formsStyleEqualsSign)
                     }
                     tm.match('.') -> {
                         if (tm.start == variableStart || tm.getChar(tm.start - 1) == '.')

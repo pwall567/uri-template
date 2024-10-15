@@ -4,9 +4,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ## [3.0] - 2024-10-15
 ### Added
-- `DotPrefixedElement`, `SlashPrefixedElement`, `SemicolonPrefixedElement`, `QueryElement`, `QueryContinuationElement`
+- `ExpressionElement`: reinstated
+### Removed
+- `VariableElement`, `ReservedElement`, `FragmentElement`, `DotPrefixedElement`, `SlashPrefixedElement`,
+  `SemicolonPrefixedElement`, `QueryElement`, `QueryContinuationElement`
 ### Changed
-- `URITemplate`, `VariableElement`, `ReservedElement`, `FragmentElement`: added support for specification level 3
+- `URITemplate`: added support for specification level 3
+- `URITemplate`: modified to make better use of `TextMatcher` parsing
+- `URITemplate`: reverted to use of parameterized `ExpressionElement`
 
 ## [2.0] - 2024-10-14
 ### Added

@@ -1,5 +1,5 @@
 /*
- * @(#) QueryContinuationElement.kt
+ * @(#) ExpressionElement.kt
  *
  * uri-template  Kotlin implementation of URI Template
  * Copyright (c) 2024 Peter Wall
@@ -26,19 +26,38 @@
 package io.kjson.uri
 
 import io.kjson.uri.Element.Companion.encodeReserved
+import io.kjson.uri.Element.Companion.encodeSimple
 import net.pwall.text.UTF8StringMapper.encodeUTF8
 
-class QueryContinuationElement(val names: List<String>) : Element {
+class ExpressionElement(
+    val names: List<String>,
+    val prefix: Char?,
+    val separator: Char,
+    val reservedEncoding: Boolean,
+    val addVariableNames: Boolean = false,
+    val formsStyleEqualsSign: Boolean = false,
+) : Element {
 
     override fun appendTo(a: Appendable, variables: List<Variable>) {
+        var continuation = false
         for (name in names) {
-            a.append('&')
-            a.append(name)
-            a.append('=')
-            variables.find { it.name == name }?.value?.let {
-                a.append(it.toString().encodeUTF8().encodeReserved())
+            variables.find { it.name == name }?.value?.let { value ->
+                if (continuation)
+                    a.append(separator)
+                else
+                    prefix?.let { a.append(it) }
+                val text = value.toString()
+                if (addVariableNames) {
+                    a.append(name)
+                    if (formsStyleEqualsSign || text.isNotEmpty())
+                        a.append('=')
+                }
+                a.append(text.encodeUTF8().encode())
+                continuation = true
             }
         }
     }
+
+    private fun String.encode(): String = if (reservedEncoding) encodeReserved() else encodeSimple()
 
 }
