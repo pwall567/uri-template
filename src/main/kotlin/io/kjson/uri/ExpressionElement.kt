@@ -41,20 +41,63 @@ class ExpressionElement(
     override fun appendTo(a: Appendable, variables: List<Variable>) {
         var continuation = false
         for (name in names) {
-            variables.find { it.name == name }?.value?.let { value ->
+            variables.find { it.name == name }?.value?.takeUnless {
+                it is List<*> && it.isEmpty() || it is Map<*, *> && it.isEmpty()
+            }?.let { value ->
                 if (continuation)
                     a.append(separator)
                 else
                     prefix?.let { a.append(it) }
-                val text = value.toString()
                 if (addVariableNames) {
                     a.append(name)
-                    if (formsStyleEqualsSign || text.isNotEmpty())
+                    if (formsStyleEqualsSign || !value.isEmptyOrAllNull())
                         a.append('=')
                 }
-                a.append(text.encodeUTF8().encode())
+                appendToString(a, value)
                 continuation = true
             }
+        }
+    }
+
+    private fun Any.isEmptyOrAllNull(): Boolean = when (this) {
+        is CharSequence -> isEmpty()
+        is List<*> -> none { it != null }
+        is Map<*, *> -> entries.none { it.key != null || it.value != null }
+        else -> toString().isEmpty()
+    }
+
+    private fun appendToString(a: Appendable, obj: Any) {
+        when (obj) {
+            is String -> a.append(obj.encodeUTF8().encode())
+            is List<*> -> {
+                var continuation = false
+                for (item in obj) {
+                    if (item != null) {
+                        if (continuation)
+                            a.append(',')
+                        appendToString(a, item)
+                        continuation = true
+                    }
+                }
+            }
+            is Map<*, *> -> {
+                var continuation = false
+                for (entry in obj.entries) {
+                    entry.key?.let {
+                        if (continuation)
+                            a.append(',')
+                        appendToString(a, it)
+                        continuation = true
+                    }
+                    entry.value?.let {
+                        if (continuation)
+                            a.append(',')
+                        appendToString(a, it)
+                        continuation = true
+                    }
+                }
+            }
+            else -> a.append(obj.toString().encodeUTF8().encode())
         }
     }
 

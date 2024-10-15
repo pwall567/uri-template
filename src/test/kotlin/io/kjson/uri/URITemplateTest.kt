@@ -419,6 +419,69 @@ class URITemplateTest {
         shouldConvert("{&x,y,empty}" to "&x=1024&y=768&empty=") { setParameterValues() }
     }
 
+    @Test fun `should perform substitutions listed in specification for Variable Expansion`() {
+        shouldConvert("{count}" to "one,two,three") { setParameterValues() }
+        shouldConvert("{/count}" to "/one,two,three") { setParameterValues() }
+        shouldConvert("{;count}" to ";count=one,two,three") { setParameterValues() }
+        shouldConvert("{?count}" to "?count=one,two,three") { setParameterValues() }
+    }
+
+    @Test fun `should perform substitutions listed in specification for Simple String Expansion`() {
+        shouldConvert("{var}" to "value") { setParameterValues() }
+        shouldConvert("{hello}" to "Hello%20World%21") { setParameterValues() }
+        shouldConvert("{half}" to "50%25") { setParameterValues() }
+        shouldConvert("O{empty}X" to "OX") { setParameterValues() }
+        shouldConvert("O{undef}X" to "OX") { setParameterValues() }
+        shouldConvert("{x,y}" to "1024,768") { setParameterValues() }
+        shouldConvert("{x,hello,y}" to "1024,Hello%20World%21,768") { setParameterValues() }
+        shouldConvert("?{x,empty}" to "?1024,") { setParameterValues() }
+        shouldConvert("?{x,undef}" to "?1024") { setParameterValues() }
+        shouldConvert("?{undef,y}" to "?768") { setParameterValues() }
+        shouldConvert("{list}" to "red,green,blue") { setParameterValues() }
+        shouldConvert("{keys}" to "semi,%3B,dot,.,comma,%2C") { setParameterValues() }
+    }
+
+    @Test fun `should perform substitutions listed in specification for Reserved Expansion`() {
+        shouldConvert("{+var}" to "value") { setParameterValues() }
+        shouldConvert("{+hello}" to "Hello%20World!") { setParameterValues() }
+        shouldConvert("{+half}" to "50%25") { setParameterValues() }
+        shouldConvert("{base}index" to "http%3A%2F%2Fexample.com%2Fhome%2Findex") { setParameterValues() }
+        shouldConvert("{+base}index" to "http://example.com/home/index") { setParameterValues() }
+        shouldConvert("O{+empty}X" to "OX") { setParameterValues() }
+        shouldConvert("O{+undef}X" to "OX") { setParameterValues() }
+        shouldConvert("{+path}/here" to "/foo/bar/here") { setParameterValues() }
+        shouldConvert("here?ref={+path}" to "here?ref=/foo/bar") { setParameterValues() }
+        shouldConvert("up{+path}{var}/here" to "up/foo/barvalue/here") { setParameterValues() }
+        shouldConvert("{+x,hello,y}" to "1024,Hello%20World!,768") { setParameterValues() }
+        shouldConvert("{+path,x}/here" to "/foo/bar,1024/here") { setParameterValues() }
+        shouldConvert("{+list}" to "red,green,blue") { setParameterValues() }
+        shouldConvert("{+keys}" to "semi,;,dot,.,comma,,") { setParameterValues() }
+    }
+
+    @Test fun `should perform substitutions listed in specification for Fragment Expansion`() {
+        shouldConvert("{#var}" to "#value") { setParameterValues() }
+        shouldConvert("{#hello}" to "#Hello%20World!") { setParameterValues() }
+        shouldConvert("{#half}" to "#50%25") { setParameterValues() }
+        shouldConvert("foo{#empty}" to "foo#") { setParameterValues() }
+        shouldConvert("foo{#undef}" to "foo") { setParameterValues() }
+        shouldConvert("{#x,hello,y}" to "#1024,Hello%20World!,768") { setParameterValues() }
+        shouldConvert("{#path,x}/here" to "#/foo/bar,1024/here") { setParameterValues() }
+        shouldConvert("{#list}" to "#red,green,blue") { setParameterValues() }
+        shouldConvert("{#keys}" to "#semi,;,dot,.,comma,,") { setParameterValues() }
+    }
+
+    @Test fun `should perform substitutions listed in specification for Label Expansion with Dot-Prefix`() {
+        shouldConvert("{.who}" to ".fred") { setParameterValues() }
+        shouldConvert("{.who,who}" to ".fred.fred") { setParameterValues() }
+        shouldConvert("{.half,who}" to ".50%25.fred") { setParameterValues() }
+        shouldConvert("X{.var}" to "X.value") { setParameterValues() }
+        shouldConvert("X{.empty}" to "X.") { setParameterValues() }
+        shouldConvert("X{.undef}" to "X") { setParameterValues() }
+        shouldConvert("X{.list}" to "X.red,green,blue") { setParameterValues() }
+        shouldConvert("X{.keys}" to "X.semi,%3B,dot,.,comma,%2C") { setParameterValues() }
+        shouldConvert("X{.empty_keys}" to "X") { setParameterValues() }
+    }
+
     private fun shouldConvert(pair: Pair<String, String>, block: URITemplate.() -> Unit = {}): URITemplate {
         val uriTemplate = URITemplate.parse(pair.first)
         uriTemplate.block()
@@ -433,12 +496,23 @@ class URITemplateTest {
     }
 
     private val parameterValues = listOf(
-        "var" to "value",
+        "count" to listOf("one", "two", "three"),
+        "dom" to listOf("example", "com"),
+        "dub" to "me/too",
         "hello" to "Hello World!",
-        "empty" to "",
+        "half" to "50%",
+        "var" to "value",
+        "who" to "fred",
+        "base" to "http://example.com/home/",
         "path" to "/foo/bar",
+        "list" to listOf("red", "green", "blue"),
+        "keys" to mapOf("semi" to ";", "dot" to ".", "comma" to ","),
+        "v" to "6",
         "x" to "1024",
         "y" to "768",
+        "empty" to "",
+        "empty_keys" to emptyList<String>(),
+        "undef" to null
     )
 
 }

@@ -4,7 +4,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ## [3.0] - 2024-10-15
 ### Added
-- `ExpressionElement`: reinstated
+- `ExpressionElement`: reinstated in expanded form
 ### Removed
 - `VariableElement`, `ReservedElement`, `FragmentElement`, `DotPrefixedElement`, `SlashPrefixedElement`,
   `SemicolonPrefixedElement`, `QueryElement`, `QueryContinuationElement`
