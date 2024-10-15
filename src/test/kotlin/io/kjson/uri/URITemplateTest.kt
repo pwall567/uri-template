@@ -49,18 +49,17 @@ class URITemplateTest {
     }
 
     @Test fun `should expand simple template`() {
-        val uriTemplate = URITemplate.parse("http://kjson.io")
-        expect("http://kjson.io") { uriTemplate.toString() }
+        shouldConvert("http://kjson.io" to "http://kjson.io")
     }
 
     @Test fun `should create empty template`() {
         val uriTemplate = URITemplate.parse("")
         assertTrue(uriTemplate.elements.isEmpty())
+        assertTrue(uriTemplate.variables.isEmpty())
     }
 
     @Test fun `should expand empty template`() {
-        val uriTemplate = URITemplate.parse("")
-        expect("") { uriTemplate.toString() }
+        shouldConvert("" to "")
     }
 
     @Test fun `should throw exception on illegal character`() {
@@ -85,8 +84,7 @@ class URITemplateTest {
     }
 
     @Test fun `should expand simple template with percent encoded characters`() {
-        val uriTemplate = URITemplate.parse("Text-%22%25%22")
-        expect("Text-%22%25%22") { uriTemplate.toString() }
+        shouldConvert("Text-%22%25%22" to "Text-%22%25%22")
     }
 
     @Test fun `should throw exception on illegal percent encoded character`() {
@@ -131,21 +129,20 @@ class URITemplateTest {
     }
 
     @Test fun `should expand template with variable`() {
-        val uriTemplate = URITemplate.parse("(prefix){var}(suffix)")
-        uriTemplate["var"] = "value"
-        expect("(prefix)value(suffix)") { uriTemplate.toString() }
+        val uriTemplate = shouldConvert("(prefix){var}(suffix)" to "(prefix)value(suffix)") {
+            this["var"] = "value"
+        }
         expect("value") { uriTemplate["var"] }
     }
 
     @Test fun `should expand template with unset variable`() {
-        val uriTemplate = URITemplate.parse("(prefix){var}(suffix)")
-        expect("(prefix)(suffix)") { uriTemplate.toString() }
+        shouldConvert("(prefix){var}(suffix)" to "(prefix)(suffix)")
     }
 
     @Test fun `should expand template with percent encoding`() {
-        val uriTemplate = URITemplate.parse("(prefix){var}(suffix)")
-        uriTemplate["var"] = "< >"
-        expect("(prefix)%3C%20%3E(suffix)") { uriTemplate.toString() }
+        val uriTemplate = shouldConvert("(prefix){var}(suffix)" to "(prefix)%3C%20%3E(suffix)") {
+            this["var"] = "< >"
+        }
         expect("< >") { uriTemplate["var"] }
     }
 
@@ -293,9 +290,9 @@ class URITemplateTest {
     }
 
     @Test fun `should expand template with reserved variable`() {
-        val uriTemplate = URITemplate.parse("(prefix){+var}(suffix)")
-        uriTemplate["var"] = "/abc/def"
-        expect("(prefix)/abc/def(suffix)") { uriTemplate.toString() }
+        val uriTemplate = shouldConvert("(prefix){+var}(suffix)" to "(prefix)/abc/def(suffix)") {
+            this["var"] = "/abc/def"
+        }
         expect("/abc/def") { uriTemplate["var"] }
     }
 
@@ -335,9 +332,9 @@ class URITemplateTest {
     }
 
     @Test fun `should expand template with fragment variable`() {
-        val uriTemplate = URITemplate.parse("(prefix){#var}(suffix)")
-        uriTemplate["var"] = "abc$"
-        expect("(prefix)#abc$(suffix)") { uriTemplate.toString() }
+        val uriTemplate = shouldConvert("(prefix){#var}(suffix)" to "(prefix)#abc$(suffix)") {
+            this["var"] = "abc$"
+        }
         expect("abc$") { uriTemplate["var"] }
     }
 
@@ -380,124 +377,68 @@ class URITemplateTest {
     }
 
     @Test fun `should expand template with multiple-variable expression`() {
-        val uriTemplate = URITemplate.parse("(prefix){var1,var2}(suffix)")
-        uriTemplate["var1"] = "alpha"
-        uriTemplate["var2"] = "beta"
-        expect("(prefix)alpha,beta(suffix)") { uriTemplate.toString() }
+        val uriTemplate = shouldConvert("(prefix){var1,var2}(suffix)" to "(prefix)alpha,beta(suffix)") {
+            this["var1"] = "alpha"
+            this["var2"] = "beta"
+        }
         expect("alpha") { uriTemplate["var1"] }
         expect("beta") { uriTemplate["var2"] }
     }
 
     @Test fun `should perform substitutions listed in specification for Level 1`() {
-        val uriTemplate1 = URITemplate.parse("{var}").apply {
-            this["var"] = "value"
-        }
-        expect("value") { uriTemplate1.toString() }
-        val uriTemplate2 = URITemplate.parse("{hello}").apply {
-            this["hello"] = "Hello World!"
-        }
-        expect("Hello%20World%21") { uriTemplate2.toString() }
+        shouldConvert("{var}" to "value") { setParameterValues() }
+        shouldConvert("{hello}" to "Hello%20World%21") { setParameterValues() }
     }
 
     @Test fun `should perform substitutions listed in specification for Level 2`() {
-        val uriTemplate1 = URITemplate.parse("{+var}").apply {
-            this["var"] = "value"
-        }
-        expect("value") { uriTemplate1.toString() }
-        val uriTemplate2 = URITemplate.parse("{+hello}").apply {
-            this["hello"] = "Hello World!"
-        }
-        expect("Hello%20World!") { uriTemplate2.toString() }
-        val uriTemplate3 = URITemplate.parse("{+path}/here").apply {
-            this["path"] = "/foo/bar"
-        }
-        expect("/foo/bar/here") { uriTemplate3.toString() }
+        shouldConvert("{+var}" to "value") { setParameterValues() }
+        shouldConvert("{+hello}" to "Hello%20World!") { setParameterValues() }
+        shouldConvert("{+path}/here" to "/foo/bar/here") { setParameterValues() }
+        shouldConvert("here?ref={+path}" to "here?ref=/foo/bar") { setParameterValues() }
+        shouldConvert("X{#var}" to "X#value") { setParameterValues() }
+        shouldConvert("X{#hello}" to "X#Hello%20World!") { setParameterValues() }
     }
 
     @Test fun `should perform substitutions listed in specification for Level 3`() {
-        val uriTemplate1 = URITemplate.parse("map?{x,y}").apply {
-            this["x"] = "1024"
-            this["y"] = "768"
-        }
-        expect("map?1024,768") { uriTemplate1.toString() }
-        val uriTemplate2 = URITemplate.parse("{x,hello,y}").apply {
-            this["x"] = "1024"
-            this["y"] = "768"
-            this["hello"] = "Hello World!"
-        }
-        expect("1024,Hello%20World%21,768") { uriTemplate2.toString() }
-        val uriTemplate3 = URITemplate.parse("{+x,hello,y}").apply {
-            this["x"] = "1024"
-            this["y"] = "768"
-            this["hello"] = "Hello World!"
-        }
-        expect("1024,Hello%20World!,768") { uriTemplate3.toString() }
-        val uriTemplate4 = URITemplate.parse("{+path,x}/here").apply {
-            this["x"] = "1024"
-            this["path"] = "/foo/bar"
-        }
-        expect("/foo/bar,1024/here") { uriTemplate4.toString() }
-        val uriTemplate5 = URITemplate.parse("{#x,hello,y}").apply {
-            this["x"] = "1024"
-            this["y"] = "768"
-            this["hello"] = "Hello World!"
-        }
-        expect("#1024,Hello%20World!,768") { uriTemplate5.toString() }
-        val uriTemplate6 = URITemplate.parse("{#path,x}/here").apply {
-            this["x"] = "1024"
-            this["path"] = "/foo/bar"
-        }
-        expect("#/foo/bar,1024/here") { uriTemplate6.toString() }
-        val uriTemplate7 = URITemplate.parse("X{.var}").apply {
-            this["var"] = "value"
-        }
-        expect("X.value") { uriTemplate7.toString() }
-        val uriTemplate8 = URITemplate.parse("X{.x,y}").apply {
-            this["x"] = "1024"
-            this["y"] = "768"
-        }
-        expect("X.1024.768") { uriTemplate8.toString() }
-        val uriTemplate9 = URITemplate.parse("{/var}").apply {
-            this["var"] = "value"
-        }
-        expect("/value") { uriTemplate9.toString() }
-        val uriTemplate10 = URITemplate.parse("{/var,x}/here").apply {
-            this["var"] = "value"
-            this["x"] = "1024"
-        }
-        expect("/value/1024/here") { uriTemplate10.toString() }
-        val uriTemplate11 = URITemplate.parse("{;x,y}").apply {
-            this["x"] = "1024"
-            this["y"] = "768"
-        }
-        expect(";x=1024;y=768") { uriTemplate11.toString() }
-        val uriTemplate12 = URITemplate.parse("{;x,y,empty}").apply {
-            this["x"] = "1024"
-            this["y"] = "768"
-            this["empty"] = ""
-        }
-        expect(";x=1024;y=768;empty") { uriTemplate12.toString() }
-        val uriTemplate13 = URITemplate.parse("{?x,y}").apply {
-            this["x"] = "1024"
-            this["y"] = "768"
-        }
-        expect("?x=1024&y=768") { uriTemplate13.toString() }
-        val uriTemplate14 = URITemplate.parse("{?x,y,empty}").apply {
-            this["x"] = "1024"
-            this["y"] = "768"
-            this["empty"] = ""
-        }
-        expect("?x=1024&y=768&empty=") { uriTemplate14.toString() }
-        val uriTemplate15 = URITemplate.parse("?fixed=yes{&x}").apply {
-            this["x"] = "1024"
-        }
-        expect("?fixed=yes&x=1024") { uriTemplate15.toString() }
-        val uriTemplate16 = URITemplate.parse("{&x,y,empty}").apply {
-            this["x"] = "1024"
-            this["y"] = "768"
-            this["empty"] = ""
-        }
-        expect("&x=1024&y=768&empty=") { uriTemplate16.toString() }
+        shouldConvert("map?{x,y}" to "map?1024,768") { setParameterValues() }
+        shouldConvert("{x,hello,y}" to "1024,Hello%20World%21,768") { setParameterValues() }
+        shouldConvert("{+x,hello,y}" to "1024,Hello%20World!,768") { setParameterValues() }
+        shouldConvert("{+path,x}/here" to "/foo/bar,1024/here") { setParameterValues() }
+        shouldConvert("{#x,hello,y}" to "#1024,Hello%20World!,768") { setParameterValues() }
+        shouldConvert("{#path,x}/here" to "#/foo/bar,1024/here") { setParameterValues() }
+        shouldConvert("X{.var}" to "X.value") { setParameterValues() }
+        shouldConvert("X{.x,y}" to "X.1024.768") { setParameterValues() }
+        shouldConvert("{/var}" to "/value") { setParameterValues() }
+        shouldConvert("{/var,x}/here" to "/value/1024/here") { setParameterValues() }
+        shouldConvert("{;x,y}" to ";x=1024;y=768") { setParameterValues() }
+        shouldConvert("{;x,y,empty}" to ";x=1024;y=768;empty") { setParameterValues() }
+        shouldConvert("{;x,y,empty}" to ";x=1024;y=768;empty") { setParameterValues() }
+        shouldConvert("{?x,y}" to "?x=1024&y=768") { setParameterValues() }
+        shouldConvert("{?x,y,empty}" to "?x=1024&y=768&empty=") { setParameterValues() }
+        shouldConvert("?fixed=yes{&x}" to "?fixed=yes&x=1024") { setParameterValues() }
+        shouldConvert("{&x,y,empty}" to "&x=1024&y=768&empty=") { setParameterValues() }
     }
+
+    private fun shouldConvert(pair: Pair<String, String>, block: URITemplate.() -> Unit = {}): URITemplate {
+        val uriTemplate = URITemplate.parse(pair.first)
+        uriTemplate.block()
+        expect(pair.second) { uriTemplate.toString() }
+        return uriTemplate
+    }
+
+    private fun URITemplate.setParameterValues() {
+        for (parameterValue in parameterValues)
+            if (contains(parameterValue.first))
+                this[parameterValue.first] = parameterValue.second
+    }
+
+    private val parameterValues = listOf(
+        "var" to "value",
+        "hello" to "Hello World!",
+        "empty" to "",
+        "path" to "/foo/bar",
+        "x" to "1024",
+        "y" to "768",
+    )
 
 }
