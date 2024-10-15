@@ -1,5 +1,5 @@
 /*
- * @(#) VariableElement.kt
+ * @(#) SimpleElement.kt
  *
  * uri-template  Kotlin implementation of URI Template
  * Copyright (c) 2024 Peter Wall
@@ -25,10 +25,10 @@
 
 package io.kjson.uri
 
-import io.kjson.uri.Element.Companion.encodeNormal
+import io.kjson.uri.Element.Companion.encodeSimple
 import net.pwall.text.UTF8StringMapper.encodeUTF8
 
-class VariableElement(val names: List<String>) : Element {
+class SimpleElement(val names: List<String>) : Element {
 
     override fun appendTo(a: Appendable, variables: List<Variable>) {
         var continuation = false
@@ -36,7 +36,7 @@ class VariableElement(val names: List<String>) : Element {
             variables.find { it.name == name }?.value?.let {
                 if (continuation)
                     a.append(',')
-                a.append(it.toString().encodeUTF8().encodeNormal())
+                a.append(it.toString().encodeUTF8().encodeSimple())
                 continuation = true
             }
         }

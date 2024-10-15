@@ -34,7 +34,7 @@ import net.pwall.text.TextMatcher
  */
 class URITemplate private constructor(val elements: List<Element>, val variables: List<Variable>) {
 
-    enum class EncodingType { NORMAL, RESERVED, FRAGMENT, DOT_PREFIXED, SLASH_PREFIXED, SEMICOLON_PREFIXED, QUERY,
+    enum class EncodingType { SIMPLE, RESERVED, FRAGMENT, DOT_PREFIXED, SLASH_PREFIXED, SEMICOLON_PREFIXED, QUERY,
             QUERY_CONTINUATION }
 
     override fun toString(): String = buildString {
@@ -95,7 +95,7 @@ class URITemplate private constructor(val elements: List<Element>, val variables
                 tm.match(';') -> EncodingType.SEMICOLON_PREFIXED
                 tm.match('?') -> EncodingType.QUERY
                 tm.match('&') -> EncodingType.QUERY_CONTINUATION
-                else -> EncodingType.NORMAL
+                else -> EncodingType.SIMPLE
             }
 
             val names = mutableListOf<String>()
@@ -112,7 +112,7 @@ class URITemplate private constructor(val elements: List<Element>, val variables
                     tm.match('}') -> {
                         storeVariable(tm, variableStart, variables, names)
                         return when (encodingType) {
-                            EncodingType.NORMAL -> VariableElement(names)
+                            EncodingType.SIMPLE -> SimpleElement(names)
                             EncodingType.RESERVED -> ReservedElement(names)
                             EncodingType.FRAGMENT -> FragmentElement(names)
                             EncodingType.DOT_PREFIXED -> DotPrefixedElement(names)

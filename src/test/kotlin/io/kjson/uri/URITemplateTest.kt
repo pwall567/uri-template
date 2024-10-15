@@ -105,7 +105,7 @@ class URITemplateTest {
                     expect("(prefix)") { text }
                 }
                 with(this[1]) {
-                    assertIs<VariableElement>(this)
+                    assertIs<SimpleElement>(this)
                     with(names) {
                         expect(1) { size }
                         expect("var") { this[0] }
@@ -220,7 +220,7 @@ class URITemplateTest {
                     expect("(prefix)") { text }
                 }
                 with(this[1]) {
-                    assertIs<VariableElement>(this)
+                    assertIs<SimpleElement>(this)
                     with(names) {
                         expect(1) { size }
                         expect("var") { this[0] }
@@ -325,7 +325,7 @@ class URITemplateTest {
                     expect("(prefix)") { text }
                 }
                 with(this[1]) {
-                    assertIs<VariableElement>(this)
+                    assertIs<SimpleElement>(this)
                     with(names) {
                         expect(2) { size }
                         expect("var1") { this[0] }

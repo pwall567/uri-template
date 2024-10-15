@@ -35,7 +35,7 @@ sealed interface Element {
 
     companion object {
 
-        fun String.encodeNormal(): String = mapCharacters {
+        fun String.encodeSimple(): String = mapCharacters {
             if (it.isUnreservedForURI()) null else StringBuilder(3).apply {
                 append('%')
                 append2Hex(this, it.code)
