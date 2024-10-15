@@ -91,7 +91,7 @@ class URITemplateTest {
 
     @Test fun `should throw exception on illegal percent encoded character`() {
         assertFailsWith<URITemplateException> { URITemplate.parse("Test%%") }.let {
-            expect("Illegal percent encoding at offset 4") { it.message }
+            expect("Illegal character at offset 4") { it.message }
         }
     }
 
@@ -106,7 +106,10 @@ class URITemplateTest {
                 }
                 with(this[1]) {
                     assertIs<VariableElement>(this)
-                    expect(listOf("var")) { names }
+                    with(names) {
+                        expect(1) { size }
+                        expect("var") { this[0] }
+                    }
                 }
                 with(this[2]) {
                     assertIs<TextElement>(this)
@@ -141,6 +144,35 @@ class URITemplateTest {
         expect("< >") { uriTemplate["var"] }
     }
 
+    @Test fun `should allow percent encoding in variable names`() {
+        val uriTemplate = URITemplate.parse("(prefix){var%5F1}*{var_1}(suffix)")
+        with(uriTemplate.variables) {
+            expect(2) { size }
+            expect("var%5F1") { this[0].name }
+            expect("var_1") { this[1].name }
+        }
+    }
+
+    @Test fun `should allow dots in variable names`() {
+        val uriTemplate = URITemplate.parse("{a.b}")
+        with(uriTemplate.variables) {
+            expect(1) { size }
+            expect("a.b") { this[0].name }
+        }
+    }
+
+    @Test fun `should not allow dots in incorrect positions in variable names`() {
+        assertFailsWith<URITemplateException> { URITemplate.parse("{x,.a}") }.let {
+            expect("Illegal dot in variable name at offset 3") { it.message }
+        }
+        assertFailsWith<URITemplateException> { URITemplate.parse("{a..b}") }.let {
+            expect("Illegal dot in variable name at offset 3") { it.message }
+        }
+        assertFailsWith<URITemplateException> { URITemplate.parse("{a.}") }.let {
+            expect("Illegal dot in variable name at offset 2") { it.message }
+        }
+    }
+
     @Test fun `should create only one variable entry when variable name is repeated`() {
         val uriTemplate = URITemplate.parse("(prefix){var}(middle){var}(suffix)")
         with(uriTemplate.variables) {
@@ -160,7 +192,7 @@ class URITemplateTest {
 
     @Test fun `should throw exception on empty expression`() {
         assertFailsWith<URITemplateException> { URITemplate.parse("(prefix){}(suffix)") }.let {
-            expect("Expression is empty at offset 9") { it.message }
+            expect("Variable name is empty at offset 9") { it.message }
         }
     }
 
@@ -189,7 +221,10 @@ class URITemplateTest {
                 }
                 with(this[1]) {
                     assertIs<VariableElement>(this)
-                    expect(listOf("var")) { names }
+                    with(names) {
+                        expect(1) { size }
+                        expect("var") { this[0] }
+                    }
                 }
                 with(this[2]) {
                     assertIs<TextElement>(this)
@@ -278,6 +313,48 @@ class URITemplateTest {
         uriTemplate["var"] = "abc$"
         expect("(prefix)#abc$(suffix)") { uriTemplate.toString() }
         expect("abc$") { uriTemplate["var"] }
+    }
+
+    @Test fun `should create template with multiple-variable expression`() {
+        val uriTemplate = URITemplate.parse("(prefix){var1,var2}(suffix)")
+        with(uriTemplate) {
+            with(elements) {
+                expect(3) { size }
+                with(this[0]) {
+                    assertIs<TextElement>(this)
+                    expect("(prefix)") { text }
+                }
+                with(this[1]) {
+                    assertIs<VariableElement>(this)
+                    with(names) {
+                        expect(2) { size }
+                        expect("var1") { this[0] }
+                        expect("var2") { this[1] }
+                    }
+                }
+                with(this[2]) {
+                    assertIs<TextElement>(this)
+                    expect("(suffix)") { text }
+                }
+            }
+            with(variables) {
+                expect(2) { size }
+                expect(Variable("var1", null)) { this[0] }
+                expect(Variable("var2", null)) { this[1] }
+            }
+        }
+        assertTrue("var1" in uriTemplate)
+        assertTrue("var2" in uriTemplate)
+        assertFalse("xxx" in uriTemplate)
+    }
+
+    @Test fun `should expand template with multiple-variable expression`() {
+        val uriTemplate = URITemplate.parse("(prefix){var1,var2}(suffix)")
+        uriTemplate["var1"] = "alpha"
+        uriTemplate["var2"] = "beta"
+        expect("(prefix)alpha,beta(suffix)") { uriTemplate.toString() }
+        expect("alpha") { uriTemplate["var1"] }
+        expect("beta") { uriTemplate["var2"] }
     }
 
     @Test fun `should perform substitutions listed in specification for Level 1`() {

@@ -66,25 +66,26 @@ class URITemplate private constructor(val elements: List<Element>, val variables
             val elements = mutableListOf<Element>()
             val variables = mutableListOf<Variable>()
             val tm = TextMatcher(string)
-            val sb = StringBuilder()
+            var textStart = 0
             while (!tm.isAtEnd) {
                 when {
-                    tm.match('%') -> tm.processPercent(sb)
                     tm.match('{') -> {
-                        elements.addTextElement(sb)
+                        if (tm.start > textStart)
+                            elements.add(TextElement(tm.getString(textStart, tm.start)))
                         elements.add(parseExpression(tm, variables))
+                        textStart = tm.index
                     }
-                    tm.match(::isValidTextCharacter) -> sb.append(tm.resultChar)
+                    tm.match('%') && tm.matchContinue(2, 2, TextMatcher::isHexDigit) -> {}
+                    tm.match(::isValidTextCharacter) -> {}
                     else -> throw URITemplateException("Illegal character", tm)
                 }
             }
-            elements.addTextElement(sb)
+            if (tm.index > textStart)
+                elements.add(TextElement(tm.getString(textStart, tm.index)))
             return URITemplate(elements, variables)
         }
 
         private fun parseExpression(tm: TextMatcher, variables: MutableList<Variable>): Element {
-
-            // TODO parse operator
 
             val encodingType: EncodingType = when {
                 tm.match('+') -> EncodingType.RESERVED
@@ -98,28 +99,18 @@ class URITemplate private constructor(val elements: List<Element>, val variables
             }
 
             val names = mutableListOf<String>()
-            val sb = StringBuilder()
+            var variableStart = tm.index
             while (!tm.isAtEnd) {
                 when {
 
                     // TODO parse modifier
 
                     tm.match(',') -> {
-                        if (sb.isEmpty())
-                            throw URITemplateException("Variable name is empty", tm.apply { index-- })
-                        val name = sb.toString()
-                        if (variables.none { it.name == name })
-                            variables.add(Variable(name, null))
-                        names.add(name)
-                        sb.setLength(0)
+                        storeVariable(tm, variableStart, variables, names)
+                        variableStart = tm.index
                     }
                     tm.match('}') -> {
-                        if (sb.isEmpty())
-                            throw URITemplateException("Expression is empty", tm.apply { index-- })
-                        val name = sb.toString()
-                        if (variables.none { it.name == name })
-                            variables.add(Variable(name, null))
-                        names.add(name)
+                        storeVariable(tm, variableStart, variables, names)
                         return when (encodingType) {
                             EncodingType.NORMAL -> VariableElement(names)
                             EncodingType.RESERVED -> ReservedElement(names)
@@ -131,30 +122,32 @@ class URITemplate private constructor(val elements: List<Element>, val variables
                             EncodingType.QUERY_CONTINUATION -> QueryContinuationElement(names)
                         }
                     }
-                    tm.match('%') -> tm.processPercent(sb)
-                    tm.match(::isValidVariableCharacter) -> sb.append(tm.resultChar)
+                    tm.match('.') -> {
+                        if (tm.start == variableStart || tm.getChar(tm.start - 1) == '.')
+                            throw URITemplateException("Illegal dot in variable name", tm.apply { index-- })
+                    }
+                    tm.match('%') && tm.matchContinue(2, 2, TextMatcher::isHexDigit) -> {}
+                    tm.match(::isValidVariableCharacter) -> {}
                     else -> throw URITemplateException("Illegal character in variable", tm)
                 }
             }
             throw URITemplateException("Missing end of expression (\"}\")")
         }
 
-        private fun MutableList<Element>.addTextElement(sb: StringBuilder) {
-            if (sb.isNotEmpty()) {
-                add(TextElement(sb.toString()))
-                sb.setLength(0)
-            }
-        }
-
-        private fun TextMatcher.processPercent(sb: StringBuilder) {
-            if (matchHex(2, 2))
-                sb.append('%').append(result)
-            else
-                throw URITemplateException("Illegal percent encoding", apply { index-- })
+        private fun storeVariable(tm: TextMatcher, variableStart: Int, variables: MutableList<Variable>,
+                names: MutableList<String>) {
+            if (tm.start == variableStart)
+                throw URITemplateException("Variable name is empty", tm.apply { index-- })
+            if (tm.getChar(tm.start - 1) == '.')
+                throw URITemplateException("Illegal dot in variable name", tm.apply { index -= 2 })
+            val name = tm.getString(variableStart, tm.start)
+            if (variables.none { it.name == name })
+                variables.add(Variable(name, null))
+            names.add(name)
         }
 
         private fun isValidTextCharacter(ch: Char): Boolean =
-                !(ch in '\u0000'..' ' || ch in "\"'<>\\^`|}" || ch in '\u007F'..'\u00BF')
+                !(ch in '\u0000'..' ' || ch in "\"%'<>\\^`|}" || ch in '\u007F'..'\u00BF')
 
         private fun isValidVariableCharacter(ch: Char): Boolean =
                 ch in 'A'..'Z' || ch in 'a'..'z' || ch in '0'..'9' || ch == '_'
