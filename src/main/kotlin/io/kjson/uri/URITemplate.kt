@@ -161,15 +161,37 @@ class URITemplate private constructor(
             var variableStart = tm.index
             while (!tm.isAtEnd) {
                 when {
-
-                    // TODO parse modifier
-
+                    tm.match(':') -> {
+                        val variableEnd = tm.start
+                        if (!tm.matchDec())
+                            throw URITemplateException("Character limit colon not followed by number", tm)
+                        val characterLimit = tm.resultInt
+                        if (characterLimit >= 10000)
+                            throw URITemplateException("Character limit too high ($characterLimit)", tm)
+                        tm.start = variableEnd
+                        storeVariable(tm, variableStart, characterLimit, false, variables, variableReferences)
+                        when {
+                            tm.match(',') -> variableStart = tm.index
+                            tm.match('}') -> return ExpressionElement(variableReferences, prefix, separator,
+                                    reservedEncoding, addVariableNames, formsStyleEqualsSign)
+                            else -> throw URITemplateException("Character limit not followed by ',' or '}'", tm)
+                        }
+                    }
+                    tm.match('*') -> {
+                        storeVariable(tm, variableStart, null, true, variables, variableReferences)
+                        when {
+                            tm.match(',') -> variableStart = tm.index
+                            tm.match('}') -> return ExpressionElement(variableReferences, prefix, separator,
+                                    reservedEncoding, addVariableNames, formsStyleEqualsSign)
+                            else -> throw URITemplateException("Explode indicator not followed by ',' or '}'", tm)
+                        }
+                    }
                     tm.match(',') -> {
-                        storeVariable(tm, variableStart, variables, variableReferences)
+                        storeVariable(tm, variableStart, null, false, variables, variableReferences)
                         variableStart = tm.index
                     }
                     tm.match('}') -> {
-                        storeVariable(tm, variableStart, variables, variableReferences)
+                        storeVariable(tm, variableStart, null, false, variables, variableReferences)
                         return ExpressionElement(variableReferences, prefix, separator, reservedEncoding,
                                 addVariableNames, formsStyleEqualsSign)
                     }
@@ -185,15 +207,15 @@ class URITemplate private constructor(
             throw URITemplateException("Missing end of expression (\"}\")")
         }
 
-        private fun storeVariable(tm: TextMatcher, variableStart: Int, variables: MutableList<Variable>,
-                variableReferences: MutableList<VariableReference>) {
+        private fun storeVariable(tm: TextMatcher, variableStart: Int, characterLimit: Int?, explode: Boolean,
+                variables: MutableList<Variable>, variableReferences: MutableList<VariableReference>) {
             if (tm.start == variableStart)
                 throw URITemplateException("Variable name is empty", tm.apply { index-- })
             if (tm.getChar(tm.start - 1) == '.')
                 throw URITemplateException("Illegal dot in variable name", tm.apply { index -= 2 })
             val name = tm.getString(variableStart, tm.start)
             val variable = variables.find { it.name == name } ?: Variable(name, null).also { variables.add(it) }
-            variableReferences.add(VariableReference(variable, null, false))
+            variableReferences.add(VariableReference(variable, characterLimit, explode))
         }
 
         private fun isValidTextCharacter(ch: Char): Boolean =

@@ -422,6 +422,99 @@ class URITemplateTest {
         expect("beta") { uriTemplate["var2"] }
     }
 
+    @Test fun `should create template with variable with character limit`() {
+        val uriTemplate = URITemplate.parse("(prefix){var:3}(suffix)")
+        with(uriTemplate) {
+            with(elements) {
+                expect(3) { size }
+                with(this[0]) {
+                    assertIs<TextElement>(this)
+                    expect("(prefix)") { text }
+                }
+                with(this[1]) {
+                    assertIs<ExpressionElement>(this)
+                    with(variableReferences) {
+                        expect(1) { size }
+                        with(this[0]) {
+                            expect("var") { variable.name }
+                            expect(3) { characterLimit }
+                            assertFalse(explode)
+                        }
+                    }
+                    assertFalse(reservedEncoding)
+                    assertNull(prefix)
+                    expect(',') { separator }
+                    assertFalse(addVariableNames)
+                    assertFalse(formsStyleEqualsSign)
+                }
+                with(this[2]) {
+                    assertIs<TextElement>(this)
+                    expect("(suffix)") { text }
+                }
+            }
+            with(variables) {
+                expect(1) { size }
+                expect(Variable("var", null)) { this[0] }
+            }
+        }
+        assertTrue("var" in uriTemplate)
+        assertFalse("xxx" in uriTemplate)
+    }
+
+    @Test fun `should throw exception on illegal character limit`() {
+        assertFailsWith<URITemplateException> { URITemplate.parse("{var:a}") }.let {
+            expect("Character limit colon not followed by number at offset 5") { it.message }
+        }
+        assertFailsWith<URITemplateException> { URITemplate.parse("{var:99999}") }.let {
+            expect("Character limit too high (99999) at offset 10") { it.message }
+        }
+    }
+
+    @Test fun `should create template with variable with explode modifier`() {
+        val uriTemplate = URITemplate.parse("(prefix){var*}(suffix)")
+        with(uriTemplate) {
+            with(elements) {
+                expect(3) { size }
+                with(this[0]) {
+                    assertIs<TextElement>(this)
+                    expect("(prefix)") { text }
+                }
+                with(this[1]) {
+                    assertIs<ExpressionElement>(this)
+                    with(variableReferences) {
+                        expect(1) { size }
+                        with(this[0]) {
+                            expect("var") { variable.name }
+                            assertNull(characterLimit)
+                            assertTrue(explode)
+                        }
+                    }
+                    assertFalse(reservedEncoding)
+                    assertNull(prefix)
+                    expect(',') { separator }
+                    assertFalse(addVariableNames)
+                    assertFalse(formsStyleEqualsSign)
+                }
+                with(this[2]) {
+                    assertIs<TextElement>(this)
+                    expect("(suffix)") { text }
+                }
+            }
+            with(variables) {
+                expect(1) { size }
+                expect(Variable("var", null)) { this[0] }
+            }
+        }
+        assertTrue("var" in uriTemplate)
+        assertFalse("xxx" in uriTemplate)
+    }
+
+    @Test fun `should throw exception on illegal explode modifier`() {
+        assertFailsWith<URITemplateException> { URITemplate.parse("{var*a}") }.let {
+            expect("Explode indicator not followed by ',' or '}' at offset 5") { it.message }
+        }
+    }
+
     @Test fun `should perform substitutions listed in specification for Level 1`() {
         shouldConvert("{var}" to "value") { setParameterValues() }
         shouldConvert("{hello}" to "Hello%20World%21") { setParameterValues() }
