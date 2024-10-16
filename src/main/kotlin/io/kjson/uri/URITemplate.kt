@@ -32,11 +32,14 @@ import net.pwall.text.TextMatcher
  *
  * @author  Peter Wall
  */
-class URITemplate private constructor(val elements: List<Element>, val variables: List<Variable>) {
+class URITemplate private constructor(
+    val elements: List<Element>,
+    val variables: List<Variable>,
+) {
 
     override fun toString(): String = buildString {
         for (element in elements)
-            element.appendTo(this, variables)
+            element.appendTo(this)
     }
 
     operator fun set(name: String, value: Any?) {
@@ -154,7 +157,7 @@ class URITemplate private constructor(val elements: List<Element>, val variables
                     formsStyleEqualsSign = false
                 }
             }
-            val names = mutableListOf<String>()
+            val variableReferences = mutableListOf<VariableReference>()
             var variableStart = tm.index
             while (!tm.isAtEnd) {
                 when {
@@ -162,13 +165,13 @@ class URITemplate private constructor(val elements: List<Element>, val variables
                     // TODO parse modifier
 
                     tm.match(',') -> {
-                        storeVariable(tm, variableStart, variables, names)
+                        storeVariable(tm, variableStart, variables, variableReferences)
                         variableStart = tm.index
                     }
                     tm.match('}') -> {
-                        storeVariable(tm, variableStart, variables, names)
-                        return ExpressionElement(names, prefix, separator, reservedEncoding, addVariableNames,
-                                formsStyleEqualsSign)
+                        storeVariable(tm, variableStart, variables, variableReferences)
+                        return ExpressionElement(variableReferences, prefix, separator, reservedEncoding,
+                                addVariableNames, formsStyleEqualsSign)
                     }
                     tm.match('.') -> {
                         if (tm.start == variableStart || tm.getChar(tm.start - 1) == '.')
@@ -183,15 +186,14 @@ class URITemplate private constructor(val elements: List<Element>, val variables
         }
 
         private fun storeVariable(tm: TextMatcher, variableStart: Int, variables: MutableList<Variable>,
-                names: MutableList<String>) {
+                variableReferences: MutableList<VariableReference>) {
             if (tm.start == variableStart)
                 throw URITemplateException("Variable name is empty", tm.apply { index-- })
             if (tm.getChar(tm.start - 1) == '.')
                 throw URITemplateException("Illegal dot in variable name", tm.apply { index -= 2 })
             val name = tm.getString(variableStart, tm.start)
-            if (variables.none { it.name == name })
-                variables.add(Variable(name, null))
-            names.add(name)
+            val variable = variables.find { it.name == name } ?: Variable(name, null).also { variables.add(it) }
+            variableReferences.add(VariableReference(variable, null, false))
         }
 
         private fun isValidTextCharacter(ch: Char): Boolean =
@@ -203,3 +205,5 @@ class URITemplate private constructor(val elements: List<Element>, val variables
     }
 
 }
+
+fun URITemplate(string: String): URITemplate = URITemplate.parse(string)

@@ -27,7 +27,7 @@ package io.kjson.uri
 
 class TextElement(val text: String) : Element {
 
-    override fun appendTo(a: Appendable, variables: List<Variable>) {
+    override fun appendTo(a: Appendable) {
         a.append(text)
     }
 

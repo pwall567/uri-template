@@ -2,6 +2,13 @@
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+## [Unreleased]
+### Added
+- `VariableReference`: to allow modifiers to be added to each use of a variable individually
+### Changed
+- `URITemplate`: added function to create instance
+- `URITemplate`, `ExpressionElement`: switched to use `VariableReference`
+
 ## [3.0] - 2024-10-15
 ### Added
 - `ExpressionElement`: reinstated in expanded form

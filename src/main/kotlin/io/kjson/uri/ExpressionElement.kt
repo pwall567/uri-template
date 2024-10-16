@@ -30,7 +30,7 @@ import io.kjson.uri.Element.Companion.encodeSimple
 import net.pwall.text.UTF8StringMapper.encodeUTF8
 
 class ExpressionElement(
-    val names: List<String>,
+    val variableReferences: List<VariableReference>,
     val prefix: Char?,
     val separator: Char,
     val reservedEncoding: Boolean,
@@ -38,10 +38,11 @@ class ExpressionElement(
     val formsStyleEqualsSign: Boolean = false,
 ) : Element {
 
-    override fun appendTo(a: Appendable, variables: List<Variable>) {
+    override fun appendTo(a: Appendable) {
         var continuation = false
-        for (name in names) {
-            variables.find { it.name == name }?.value?.takeUnless {
+        for (reference in variableReferences) {
+            val variable = reference.variable
+            variable.value?.takeUnless {
                 it is List<*> && it.isEmpty() || it is Map<*, *> && it.isEmpty()
             }?.let { value ->
                 if (continuation)
@@ -49,7 +50,7 @@ class ExpressionElement(
                 else
                     prefix?.let { a.append(it) }
                 if (addVariableNames) {
-                    a.append(name)
+                    a.append(variable.name)
                     if (formsStyleEqualsSign || !value.isEmptyOrAllNull())
                         a.append('=')
                 }

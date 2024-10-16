@@ -48,6 +48,19 @@ class URITemplateTest {
         }
     }
 
+    @Test fun `should create simple template using function`() {
+        val uriTemplate = URITemplate("http://kjson.io")
+        with(uriTemplate) {
+            with(elements) {
+                expect(1) { size }
+                with(this[0]) {
+                    assertIs<TextElement>(this)
+                    expect("http://kjson.io") { text }
+                }
+            }
+        }
+    }
+
     @Test fun `should expand simple template`() {
         shouldConvert("http://kjson.io" to "http://kjson.io")
     }
@@ -104,9 +117,13 @@ class URITemplateTest {
                 }
                 with(this[1]) {
                     assertIs<ExpressionElement>(this)
-                    with(names) {
+                    with(variableReferences) {
                         expect(1) { size }
-                        expect("var") { this[0] }
+                        with(this[0]) {
+                            expect("var") { variable.name }
+                            assertNull(characterLimit)
+                            assertFalse(explode)
+                        }
                     }
                     assertFalse(reservedEncoding)
                     assertNull(prefix)
@@ -223,9 +240,13 @@ class URITemplateTest {
                 }
                 with(this[1]) {
                     assertIs<ExpressionElement>(this)
-                    with(names) {
+                    with(variableReferences) {
                         expect(1) { size }
-                        expect("var") { this[0] }
+                        with(this[0]) {
+                            expect("var") { variable.name }
+                            assertNull(characterLimit)
+                            assertFalse(explode)
+                        }
                     }
                     assertFalse(reservedEncoding)
                     assertNull(prefix)
@@ -265,9 +286,13 @@ class URITemplateTest {
                 }
                 with(this[1]) {
                     assertIs<ExpressionElement>(this)
-                    with(names) {
+                    with(variableReferences) {
                         expect(1) { size }
-                        expect("var") { this[0] }
+                        with(this[0]) {
+                            expect("var") { variable.name }
+                            assertNull(characterLimit)
+                            assertFalse(explode)
+                        }
                     }
                     assertTrue(reservedEncoding)
                     assertNull(prefix)
@@ -307,9 +332,13 @@ class URITemplateTest {
                 }
                 with(this[1]) {
                     assertIs<ExpressionElement>(this)
-                    with(names) {
+                    with(variableReferences) {
                         expect(1) { size }
-                        expect("var") { this[0] }
+                        with(this[0]) {
+                            expect("var") { variable.name }
+                            assertNull(characterLimit)
+                            assertFalse(explode)
+                        }
                     }
                     assertTrue(reservedEncoding)
                     expect('#') { prefix }
@@ -349,10 +378,18 @@ class URITemplateTest {
                 }
                 with(this[1]) {
                     assertIs<ExpressionElement>(this)
-                    with(names) {
+                    with(variableReferences) {
                         expect(2) { size }
-                        expect("var1") { this[0] }
-                        expect("var2") { this[1] }
+                        with(this[0]) {
+                            expect("var1") { variable.name }
+                            assertNull(characterLimit)
+                            assertFalse(explode)
+                        }
+                        with(this[1]) {
+                            expect("var2") { variable.name }
+                            assertNull(characterLimit)
+                            assertFalse(explode)
+                        }
                     }
                     assertFalse(reservedEncoding)
                     assertNull(prefix)

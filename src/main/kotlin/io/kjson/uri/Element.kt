@@ -31,7 +31,7 @@ import net.pwall.util.IntOutput.append2Hex
 
 sealed interface Element {
 
-    fun appendTo(a: Appendable, variables: List<Variable>)
+    fun appendTo(a: Appendable)
 
     companion object {
 
