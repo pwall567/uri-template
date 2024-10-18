@@ -12,7 +12,7 @@ Kotlin implementation of [URI Template](https://www.rfc-editor.org/rfc/rfc6570.h
 The [URI Template](https://www.rfc-editor.org/rfc/rfc6570.html) standard has been adopted by a number of frameworks for
 the specification of URIs containing parameterized segments.
 
-In addition, the [OpenAPI Specification](https://swagger.io/specification/) uses a format identical to
+In addition, the [OpenAPI Specification](https://swagger.io/specification/) uses a format compatible with
 [Level 1](#level-1) URI Templates for the specification of URIs in the `paths` object, and the
 [JSON Schema Specification](https://json-schema.org/specification) specifies
 [`uri-template`](https://json-schema.org/draft/2020-12/json-schema-validation#name-uri-template) as a format type for
@@ -42,6 +42,9 @@ If necessary, the values are percent-encoded as required by
 [URI Specification](https://www.rfc-editor.org/rfc/rfc3986).
 If the value has not been set, or if it has been set to `null`, the substitution string will be empty.
 
+When the expanded form of the template is part of a larger string, the `appendTo()` function may be used, avoiding the
+need to create a separate string.
+
 The `URITemplate` object is not an implementation of the `Map` interface, but it implements the `get()` and `set()`
 operations as if it were a `MutableMap<String, Any?>`, with the limitation that the key must have been specified as a
 variable name in the template string.
@@ -50,25 +53,39 @@ thrown).
 
 The `URITemplate` object is mutable, and therefore is not thread-safe, so the expected pattern of usage is to create the
 object, set its variables, use it and then discard it.
-For anyone concerned about the run-time cost of parsing the template string every time, the `copy()` function will
-create a copy of a template (including current variable values).
+For anyone concerned about the run-time cost of parsing a complex template multiple times, the `copy()` function will
+create a copy of an existing template (including current variable values).
 
 To check whether a variable name has been specified in the template, the `contains()` function will allow the use of the
-Kotlin `in` syntax.
+Kotlin `in` syntax:
+```kotlin
+        if ("customerId" in template)
+            template["customerId"] = customerId
+```
 
 And the function `clear()` will reset the values of all variables to `null`.
+
+## Variables
+
+The specification describes how various data types are to be handled when used as values to be substituted into
+variables, but it is written in general terms unrelated to any particular computer language.
+
+When the specification describes the handling of lists, this library applies those rules to values of type `List<*>`.
+What the specification refers to as "associative arrays" are values of type `Map<*, *>` in this implementation.
+All other non-null values are output as strings using the `toString()` function of the value, and null or missing
+values result in an empty string.
 
 ## Level 1
 
 The [URI Template](https://www.rfc-editor.org/rfc/rfc6570.html) specification describes the simple substitution of a
-string as "Level 1" templates.
+string, without modification and using standard percent encoding, as "Level 1" templates.
 
-The current version of the `uri-template` library conforms to this level; refer to the specification for further details
-of the substitutions performed.
+All versions of the `uri-template` library support this level.
 
 ## Level 2
 
-The specification describes a "Level 2", adding operator characters which modify the expansion of the variables.
+The specification describes a "Level 2", adding operator characters which modify the expansion of the variable
+expressions.
 See [Section 1.2](https://www.rfc-editor.org/rfc/rfc6570.html#section-1.2) of the specification for more details.
 
 Version 2.0 (and later) of the `uri-template` library supports this level.
@@ -81,31 +98,42 @@ Version 3.0 (and later) of the `uri-template` library supports this level.
 
 ## Level 4
 
-"Level 4" of the specification adds the concept of a variable modifier as a suffix on each variable.  
+"Level 4" of the specification adds the concept of a value modifier as a suffix on each variable; the "Prefix" modifier
+limits the expansion of string values to a prefix of a specified length, and the "Explode" modifier changes the handling
+of `List<*>` and `Map<*, *>` values in a manner similar to the "spread" operators in some languages.
+See [Section 2.4](https://www.rfc-editor.org/rfc/rfc6570.html#section-2.4) of the specification for more details.
 
-The `uri-template` library does not currently support this level.
+Version 4.0 (and later) of the `uri-template` library supports this level.
+
+## Examples
+
+The specification has a large number of examples throughout the document, and these examples are a valuable resource for
+anyone attempting to understand the specification.
+
+The unit test class for this library tests every example in the document, confirming that the library behaves as
+specified in all cases.
 
 ## Dependency Specification
 
-The latest version of the library is 3.0, and it may be obtained from the Maven Central repository.
+The latest version of the library is 4.0, and it may be obtained from the Maven Central repository.
 
 ### Maven
 ```xml
     <dependency>
       <groupId>io.kjson</groupId>
       <artifactId>uri-template</artifactId>
-      <version>3.0</version>
+      <version>4.0</version>
     </dependency>
 ```
 ### Gradle
 ```groovy
-    implementation 'io.kjson:uri-template:3.0'
+    implementation 'io.kjson:uri-template:4.0'
 ```
 ### Gradle (kts)
 ```kotlin
-    implementation("io.kjson:uri-template:3.0")
+    implementation("io.kjson:uri-template:4.0")
 ```
 
 Peter Wall
 
-2024-10-15
+2024-10-17

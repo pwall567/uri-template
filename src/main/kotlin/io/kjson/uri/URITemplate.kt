@@ -37,9 +37,23 @@ class URITemplate private constructor(
     val variables: List<Variable>,
 ) {
 
+    // TODO:
+    //   1. Change toString() to expand() (and appendTo() to expandTo())
+    //   2. Add forms of expand() that take Map of values or List of name/value Pairs
+    //   3. If all values are passed in via expand(), can URITemplate be immutable?
+    //   4. Test with kjson-core (JSONObject as input to expand() - remember it's both a Map and a List)
+    //   5. Store original string in object and use that for toString()
+    //   6. New Parser that stores lists as vars (less parameter passing) and returns Pair(elements, variables) - ?
+    //   7. Change package to io.kjson.uritemplate ?
+    //   8. Allow Array<*>, Pair<*, *> and Triple<*, *, *> as forms of list (also Map.Entry<*, *>?)
+    //   9. What about range as a form of list?
     override fun toString(): String = buildString {
+        appendTo(this)
+    }
+
+    fun appendTo(a: Appendable) {
         for (element in elements)
-            element.appendTo(this)
+            element.appendTo(a)
     }
 
     operator fun set(name: String, value: Any?) {
@@ -165,9 +179,14 @@ class URITemplate private constructor(
                         val variableEnd = tm.start
                         if (!tm.matchDec())
                             throw URITemplateException("Character limit colon not followed by number", tm)
-                        val characterLimit = tm.resultInt
+                        val characterLimit = try {
+                            tm.resultInt
+                        } catch (_: NumberFormatException) {
+                            throw URITemplateException("Illegal number (${tm.result})", tm.apply { revert() })
+                        }
                         if (characterLimit >= 10000)
-                            throw URITemplateException("Character limit too high ($characterLimit)", tm)
+                            throw URITemplateException("Character limit too high ($characterLimit)",
+                                    tm.apply { revert() })
                         tm.start = variableEnd
                         storeVariable(tm, variableStart, characterLimit, false, variables, variableReferences)
                         when {

@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Changed
 - `URITemplate`: added function to create instance
 - `URITemplate`, `ExpressionElement`: switched to use `VariableReference`
+- `ExpressionElement`: implemented Level 4 functionality
+- `ExpressionElement`: fixed bug in Unicode surrogate pair handling
+- `URITemplate`: improved error handling
+- `URITemplate`: added `appendTo()`
 
 ## [3.0] - 2024-10-15
 ### Added
