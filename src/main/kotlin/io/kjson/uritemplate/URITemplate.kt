@@ -23,7 +23,7 @@
  * SOFTWARE.
  */
 
-package io.kjson.uri
+package io.kjson.uritemplate
 
 import net.pwall.text.TextMatcher
 
@@ -32,47 +32,52 @@ import net.pwall.text.TextMatcher
  *
  * @author  Peter Wall
  */
-class URITemplate private constructor(
-    val elements: List<Element>,
-    val variables: List<Variable>,
-) {
+class URITemplate(val string: String) {
 
-    // TODO:
-    //   1. Change toString() to expand() (and appendTo() to expandTo())
-    //   2. Add forms of expand() that take Map of values or List of name/value Pairs
-    //   3. If all values are passed in via expand(), can URITemplate be immutable?
-    //   4. Test with kjson-core (JSONObject as input to expand() - remember it's both a Map and a List)
-    //   5. Store original string in object and use that for toString()
-    //   6. New Parser that stores lists as vars (less parameter passing) and returns Pair(elements, variables) - ?
-    //   7. Change package to io.kjson.uritemplate ?
-    //   8. Allow Array<*>, Pair<*, *> and Triple<*, *, *> as forms of list (also Map.Entry<*, *>?)
-    //   9. What about range as a form of list?
-    override fun toString(): String = buildString {
-        appendTo(this)
+    val elements = parse(string)
+
+    /**
+     * Expand the template to a `String`, using the supplied [VariableResolver] to resolve variable names.
+     */
+    fun expand(resolver: VariableResolver): String = buildString {
+        expandTo(this, resolver)
     }
 
-    fun appendTo(a: Appendable) {
+    /**
+     * Expand the template to a `String`, using the supplied [Map] to resolve variable names.
+     */
+    fun expand(values: Map<String, Any?>): String = buildString {
+        expandTo(this) { values[it] }
+    }
+
+    /**
+     * Expand the template to a `String`, using the supplied [Pair] to resolve a single variable name.
+     */
+    fun expand(value: Pair<String, Any?>) = buildString {
+        expandTo(this) { if (it == value.first) value.second else null }
+    }
+
+    /**
+     * Expand the template to a `String`, with all variables resolving to `null`.
+     */
+    fun expand() = buildString {
+        expandTo(this) { null }
+    }
+
+    /**
+     * Expand the template by appending to an [Appendable], using the supplied [VariableResolver] to resolve variable
+     * names.
+     */
+    fun expandTo(a: Appendable, resolver: VariableResolver) {
         for (element in elements)
-            element.appendTo(a)
+            element.appendTo(a, resolver)
     }
 
-    operator fun set(name: String, value: Any?) {
-        getVariable(name).value = value
-    }
+    override fun toString(): String = string
 
-    operator fun get(name: String): Any? = getVariable(name).value
+    override fun equals(other: Any?): Boolean = this === other || other is URITemplate && string == other.string
 
-    operator fun contains(name: String): Boolean = variables.any { it.name == name }
-
-    fun copy(): URITemplate = URITemplate(elements, variables)
-
-    fun clear() {
-        for (variable in variables)
-            variable.value = null
-    }
-
-    private fun getVariable(name: String): Variable = variables.find { it.name == name } ?:
-            throw URITemplateException("Variable not recognised - $name")
+    override fun hashCode(): Int = string.hashCode()
 
     companion object {
 
@@ -84,17 +89,16 @@ class URITemplate private constructor(
         private const val QUERY_EXPANSION = '?'
         private const val QUERY_CONTINUATION_EXPANSION = '&'
 
-        fun parse(string: String): URITemplate {
+        private fun parse(string: String): List<Element> {
             val elements = mutableListOf<Element>()
-            val variables = mutableListOf<Variable>()
             val tm = TextMatcher(string)
             var textStart = 0
             while (!tm.isAtEnd) {
                 when {
                     tm.match('{') -> {
                         if (tm.start > textStart)
-                            elements.add(TextElement(tm.getString(textStart, tm.start)))
-                        elements.add(parseExpression(tm, variables))
+                            elements.add(TextElement(string, textStart, tm.start))
+                        elements.add(parseExpression(tm))
                         textStart = tm.index
                     }
                     tm.match('%') && tm.matchContinue(2, 2, TextMatcher::isHexDigit) -> {}
@@ -103,11 +107,11 @@ class URITemplate private constructor(
                 }
             }
             if (tm.index > textStart)
-                elements.add(TextElement(tm.getString(textStart, tm.index)))
-            return URITemplate(elements, variables)
+                elements.add(TextElement(string, textStart, tm.index))
+            return elements
         }
 
-        private fun parseExpression(tm: TextMatcher, variables: MutableList<Variable>): ExpressionElement {
+        private fun parseExpression(tm: TextMatcher): ExpressionElement {
             val prefix: Char?
             val separator: Char
             val reservedEncoding: Boolean
@@ -188,7 +192,7 @@ class URITemplate private constructor(
                             throw URITemplateException("Character limit too high ($characterLimit)",
                                     tm.apply { revert() })
                         tm.start = variableEnd
-                        storeVariable(tm, variableStart, characterLimit, false, variables, variableReferences)
+                        storeVariable(tm, variableStart, characterLimit, false, variableReferences)
                         when {
                             tm.match(',') -> variableStart = tm.index
                             tm.match('}') -> return ExpressionElement(variableReferences, prefix, separator,
@@ -197,7 +201,7 @@ class URITemplate private constructor(
                         }
                     }
                     tm.match('*') -> {
-                        storeVariable(tm, variableStart, null, true, variables, variableReferences)
+                        storeVariable(tm, variableStart, null, true, variableReferences)
                         when {
                             tm.match(',') -> variableStart = tm.index
                             tm.match('}') -> return ExpressionElement(variableReferences, prefix, separator,
@@ -206,11 +210,11 @@ class URITemplate private constructor(
                         }
                     }
                     tm.match(',') -> {
-                        storeVariable(tm, variableStart, null, false, variables, variableReferences)
+                        storeVariable(tm, variableStart, null, false, variableReferences)
                         variableStart = tm.index
                     }
                     tm.match('}') -> {
-                        storeVariable(tm, variableStart, null, false, variables, variableReferences)
+                        storeVariable(tm, variableStart, null, false, variableReferences)
                         return ExpressionElement(variableReferences, prefix, separator, reservedEncoding,
                                 addVariableNames, formsStyleEqualsSign)
                     }
@@ -227,14 +231,13 @@ class URITemplate private constructor(
         }
 
         private fun storeVariable(tm: TextMatcher, variableStart: Int, characterLimit: Int?, explode: Boolean,
-                variables: MutableList<Variable>, variableReferences: MutableList<VariableReference>) {
+                variableReferences: MutableList<VariableReference>) {
             if (tm.start == variableStart)
                 throw URITemplateException("Variable name is empty", tm.apply { index-- })
             if (tm.getChar(tm.start - 1) == '.')
                 throw URITemplateException("Illegal dot in variable name", tm.apply { index -= 2 })
             val name = tm.getString(variableStart, tm.start)
-            val variable = variables.find { it.name == name } ?: Variable(name, null).also { variables.add(it) }
-            variableReferences.add(VariableReference(variable, characterLimit, explode))
+            variableReferences.add(VariableReference(name, characterLimit, explode))
         }
 
         private fun isValidTextCharacter(ch: Char): Boolean =
@@ -246,5 +249,3 @@ class URITemplate private constructor(
     }
 
 }
-
-fun URITemplate(string: String): URITemplate = URITemplate.parse(string)

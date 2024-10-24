@@ -79,6 +79,12 @@
       <artifactId>kotlin-stdlib-jdk8</artifactId>
     </dependency>
     <dependency>
+      <groupId>io.kjson</groupId>
+      <artifactId>kjson-core</artifactId>
+      <version>9.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.jetbrains.kotlin</groupId>
       <artifactId>kotlin-test-junit</artifactId>
       <scope>test</scope>

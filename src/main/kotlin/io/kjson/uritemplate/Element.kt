@@ -1,5 +1,5 @@
 /*
- * @(#) URITemplateException.kt
+ * @(#) Element.kt
  *
  * uri-template  Kotlin implementation of URI Template
  * Copyright (c) 2024 Peter Wall
@@ -23,16 +23,10 @@
  * SOFTWARE.
  */
 
-package io.kjson.uri
+package io.kjson.uritemplate
 
-import net.pwall.text.TextMatcher
+sealed interface Element {
 
-/**
- * An exception class for the URI Template library.
- *
- * @author  Peter Wall
- */
-class URITemplateException(
-    val text: String,
-    val tm: TextMatcher? = null,
-) : RuntimeException(if (tm == null) text else "$text at offset ${tm.index}")
+    fun appendTo(a: Appendable, resolver: VariableResolver)
+
+}

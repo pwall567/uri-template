@@ -1,5 +1,5 @@
 /*
- * @(#) VariableReference.kt
+ * @(#) TextElement.kt
  *
  * uri-template  Kotlin implementation of URI Template
  * Copyright (c) 2024 Peter Wall
@@ -23,10 +23,16 @@
  * SOFTWARE.
  */
 
-package io.kjson.uri
+package io.kjson.uritemplate
 
-class VariableReference(
-    val variable: Variable,
-    val characterLimit: Int?,
-    val explode: Boolean,
-)
+class TextElement(val text: String, val start: Int, val end: Int) : Element {
+
+    override fun appendTo(a: Appendable, resolver: VariableResolver) {
+        a.append(text, start, end)
+    }
+
+    override fun toString(): String = buildString {
+        append(text, start, end)
+    }
+
+}

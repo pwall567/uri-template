@@ -1,5 +1,5 @@
 /*
- * @(#) TextElement.kt
+ * @(#) VariableResolver.kt
  *
  * uri-template  Kotlin implementation of URI Template
  * Copyright (c) 2024 Peter Wall
@@ -23,12 +23,10 @@
  * SOFTWARE.
  */
 
-package io.kjson.uri
+package io.kjson.uritemplate
 
-class TextElement(val text: String) : Element {
+fun interface VariableResolver {
 
-    override fun appendTo(a: Appendable) {
-        a.append(text)
-    }
+    operator fun get(name: String): Any?
 
 }

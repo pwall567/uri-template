@@ -2,16 +2,17 @@
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
-## [Unreleased]
+## [4.0] - 2024-10-25
 ### Added
 - `VariableReference`: to allow modifiers to be added to each use of a variable individually
+- `BooleanOps`: a simple "test and set" functionality
 ### Changed
-- `URITemplate`: added function to create instance
-- `URITemplate`, `ExpressionElement`: switched to use `VariableReference`
+- `URITemplate`: changed to make constructor public, to make object immutable and make `parse()` function private
+- `URITemplate`, `ExpressionElement`: major re-work, switched to use `VariableReference`
 - `ExpressionElement`: implemented Level 4 functionality
 - `ExpressionElement`: fixed bug in Unicode surrogate pair handling
 - `URITemplate`: improved error handling
-- `URITemplate`: added `appendTo()`
+- `URITemplate`: changed to use `expand()` instead of `toString()`, and added `expandTo()`
 
 ## [3.0] - 2024-10-15
 ### Added

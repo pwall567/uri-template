@@ -1,5 +1,5 @@
 /*
- * @(#) Variable.kt
+ * @(#) URITemplateJSONTest.kt
  *
  * uri-template  Kotlin implementation of URI Template
  * Copyright (c) 2024 Peter Wall
@@ -23,9 +23,42 @@
  * SOFTWARE.
  */
 
-package io.kjson.uri
+package io.kjson.uritemplate
 
-data class Variable(
-     val name: String,
-     var value: Any?,
-)
+import kotlin.test.Test
+import kotlin.test.expect
+import io.kjson.JSONArray
+
+import io.kjson.JSONObject
+import io.kjson.JSONString
+
+class URITemplateJSONTest {
+
+    @Test fun `should take JSONObject as variable resolver`() {
+        val json = JSONObject.build {
+            add("aaa", "something")
+            add("bbb", 1234)
+        }
+        val template = URITemplate("/{aaa}/{bbb}")
+        expect("/something/1234") { template.expand(json) }
+    }
+
+    @Test fun `should expand JSONArray like a List`() {
+        val json = JSONObject.build {
+            add("aaa", JSONArray.build {
+                add("abc")
+                add("def")
+                add("ghi")
+            })
+        }
+        val template = URITemplate("{/aaa*}")
+        expect("/abc/def/ghi") { template.expand(json) }
+    }
+
+    @Test fun `should expand JSONObject Property like a List`() {
+        val json = JSONObject.Property("abc", JSONString("def"))
+        val template = URITemplate("{/aaa*}")
+        expect("/abc/def") { template.expand { if (it == "aaa") json else null } }
+    }
+
+}
