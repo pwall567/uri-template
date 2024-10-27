@@ -125,8 +125,8 @@ values result in an empty string.
 
 The [URI Template](https://www.rfc-editor.org/rfc/rfc6570.html) specification describes the simple substitution of a
 string, without modification and using standard percent encoding, as &ldquo;Level 1&rdquo; templates.
-This form of template is the form most commonly used by other systems, and if compatibility with a broad range of
-systems is a priority, 
+This form of template is the form most commonly used by other systems, and in cases where compatibility with a broad
+range of systems is a priority, 
 
 All versions of the `uri-template` library support this level.
 
