@@ -26,9 +26,10 @@
 package io.kjson.uritemplate
 
 import kotlin.test.Test
-import kotlin.test.expect
-import io.kjson.JSONArray
 
+import io.kstuff.test.shouldBe
+
+import io.kjson.JSONArray
 import io.kjson.JSONObject
 import io.kjson.JSONString
 
@@ -40,7 +41,7 @@ class URITemplateJSONTest {
             add("bbb", 1234)
         }
         val template = URITemplate("/{aaa}/{bbb}")
-        expect("/something/1234") { template.expand(json) }
+        template.expand(json) shouldBe "/something/1234"
     }
 
     @Test fun `should expand JSONArray like a List`() {
@@ -52,13 +53,13 @@ class URITemplateJSONTest {
             })
         }
         val template = URITemplate("{/aaa*}")
-        expect("/abc/def/ghi") { template.expand(json) }
+        template.expand(json) shouldBe "/abc/def/ghi"
     }
 
     @Test fun `should expand JSONObject Property like a List`() {
         val json = JSONObject.Property("abc", JSONString("def"))
         val template = URITemplate("{/aaa*}")
-        expect("/abc/def") { template.expand { if (it == "aaa") json else null } }
+        template.expand { if (it == "aaa") json else null } shouldBe "/abc/def"
     }
 
 }

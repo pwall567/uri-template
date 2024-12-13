@@ -26,12 +26,10 @@
 package io.kjson.uritemplate
 
 import kotlin.test.Test
-import kotlin.test.assertFailsWith
-import kotlin.test.assertFalse
-import kotlin.test.assertIs
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
-import kotlin.test.expect
+
+import io.kstuff.test.shouldBe
+import io.kstuff.test.shouldBeType
+import io.kstuff.test.shouldThrow
 
 import io.kjson.uritemplate.ExpressionElement.Companion.encodeSimple
 import net.pwall.text.UTF8StringMapper.encodeUTF8
@@ -41,13 +39,13 @@ class URITemplateTest {
     @Test fun `should create simple template`() {
         val uriTemplate = URITemplate("http://kjson.io")
         with(uriTemplate) {
-            expect("http://kjson.io") { string }
+            string shouldBe "http://kjson.io"
             with(elements) {
-                expect(1) { size }
+                size shouldBe 1
                 with(this[0]) {
-                    assertIs<TextElement>(this)
-                    expect("http://kjson.io") { text }
-                    expect("http://kjson.io") { toString() }
+                    shouldBeType<TextElement>()
+                    text shouldBe "http://kjson.io"
+                    toString() shouldBe "http://kjson.io"
                 }
             }
         }
@@ -64,12 +62,12 @@ class URITemplateTest {
             uriTemplate.expandTo(this) { null }
             append("\">kjson</a>")
         }
-        expect("<a href=\"http://kjson.io\">kjson</a>") { aElement }
+        aElement shouldBe "<a href=\"http://kjson.io\">kjson</a>"
     }
 
     @Test fun `should create empty template`() {
         val uriTemplate = URITemplate("")
-        assertTrue(uriTemplate.elements.isEmpty())
+        uriTemplate.elements.isEmpty() shouldBe true
     }
 
     @Test fun `should expand empty template`() {
@@ -77,10 +75,11 @@ class URITemplateTest {
     }
 
     @Test fun `should throw exception on illegal character`() {
-        assertFailsWith<URITemplateException> { URITemplate("Test<>") }.let {
-            expect("Illegal character at offset 4") { it.message }
-            expect("Illegal character") { it.text }
-            expect(4) {it.tm?.index }
+        shouldThrow<URITemplateException>("Illegal character at offset 4") {
+            URITemplate("Test<>")
+        }.let {
+            it.text shouldBe "Illegal character"
+            it.tm?.index shouldBe 4
         }
     }
 
@@ -88,11 +87,11 @@ class URITemplateTest {
         val uriTemplate = URITemplate("Text-%22%25%22")
         with(uriTemplate) {
             with(elements) {
-                expect(1) { size }
+                size shouldBe 1
                 with(this[0]) {
-                    assertIs<TextElement>(this)
-                    expect("Text-%22%25%22") { text }
-                    expect("Text-%22%25%22") { toString() }
+                    shouldBeType<TextElement>()
+                    text shouldBe "Text-%22%25%22"
+                    toString() shouldBe "Text-%22%25%22"
                 }
             }
         }
@@ -103,8 +102,8 @@ class URITemplateTest {
     }
 
     @Test fun `should throw exception on illegal percent encoded character`() {
-        assertFailsWith<URITemplateException> { URITemplate("Test%%") }.let {
-            expect("Illegal character at offset 4") { it.message }
+        shouldThrow<URITemplateException>("Illegal character at offset 4") {
+            URITemplate("Test%%")
         }
     }
 
@@ -113,38 +112,38 @@ class URITemplateTest {
         val uriTemplate = URITemplate(templateString)
         with(uriTemplate) {
             with(elements) {
-                expect(3) { size }
+                size shouldBe 3
                 with(this[0]) {
-                    assertIs<TextElement>(this)
-                    expect(templateString) { text }
-                    expect(0) { start }
-                    expect(8) { end }
-                    expect("(prefix)") { toString() }
+                    shouldBeType<TextElement>()
+                    text shouldBe templateString
+                    start shouldBe 0
+                    end shouldBe 8
+                    toString() shouldBe "(prefix)"
                 }
                 with(this[1]) {
-                    assertIs<ExpressionElement>(this)
+                    shouldBeType<ExpressionElement>()
                     with(variableReferences) {
-                        expect(1) { size }
+                        size shouldBe 1
                         with(this[0]) {
-                            expect("var") { name }
-                            assertNull(characterLimit)
-                            assertFalse(explode)
-                            expect("var") { toString() }
+                            name shouldBe "var"
+                            characterLimit shouldBe null
+                            explode shouldBe false
+                            toString() shouldBe "var"
                         }
                     }
-                    assertFalse(reservedEncoding)
-                    assertNull(prefix)
-                    expect(',') { separator }
-                    assertFalse(addVariableNames)
-                    assertFalse(formsStyleEqualsSign)
-                    expect("{var}") { toString() }
+                    reservedEncoding shouldBe false
+                    prefix shouldBe null
+                    separator shouldBe ','
+                    addVariableNames shouldBe false
+                    formsStyleEqualsSign shouldBe false
+                    toString() shouldBe "{var}"
                 }
                 with(this[2]) {
-                    assertIs<TextElement>(this)
-                    expect(templateString) { text }
-                    expect(13) { start }
-                    expect(21) { end }
-                    expect("(suffix)") { toString() }
+                    shouldBeType<TextElement>()
+                    text shouldBe templateString
+                    start shouldBe 13
+                    end shouldBe 21
+                    toString() shouldBe "(suffix)"
                 }
             }
         }
@@ -152,17 +151,17 @@ class URITemplateTest {
 
     @Test fun `should expand template with variable`() {
         val uriTemplate = URITemplate("(prefix){var}(suffix)")
-        expect("(prefix)value(suffix)") { uriTemplate.expand { if (it == "var") "value" else null } }
+        uriTemplate.expand { if (it == "var") "value" else null } shouldBe "(prefix)value(suffix)"
     }
 
     @Test fun `should expand template with variable using Map`() {
         val uriTemplate = URITemplate("(prefix){var}(suffix)")
-        expect("(prefix)value(suffix)") { uriTemplate.expand(mapOf("var" to "value")) }
+        uriTemplate.expand(mapOf("var" to "value")) shouldBe "(prefix)value(suffix)"
     }
 
     @Test fun `should expand template with variable using Pair`() {
         val uriTemplate = URITemplate("(prefix){var}(suffix)")
-        expect("(prefix)value(suffix)") { uriTemplate.expand("var" to "value") }
+        uriTemplate.expand("var" to "value") shouldBe "(prefix)value(suffix)"
     }
 
     @Test fun `should expand template with unset variable`() {
@@ -177,43 +176,43 @@ class URITemplateTest {
         val templateString = "(prefix){var%5F1}*{var_1}(suffix)"
         val uriTemplate = URITemplate(templateString)
         with(uriTemplate.elements) {
-            expect(5) { size }
+            size shouldBe 5
             with(this[0]) {
-                assertIs<TextElement>(this)
-                expect(templateString) { text }
-                expect(0) { start }
-                expect(8) { end }
-                expect("(prefix)") { toString() }
+                shouldBeType<TextElement>()
+                text shouldBe templateString
+                start shouldBe 0
+                end shouldBe 8
+                toString() shouldBe "(prefix)"
             }
             with(this[1]) {
-                assertIs<ExpressionElement>(this)
+                shouldBeType<ExpressionElement>()
                 with(variableReferences) {
-                    expect(1) { size }
-                    expect("var%5F1") { this[0].name }
+                    size shouldBe 1
+                    this[0].name shouldBe "var%5F1"
                 }
-                expect("{var%5F1}") { toString() }
+                toString() shouldBe "{var%5F1}"
             }
             with(this[2]) {
-                assertIs<TextElement>(this)
-                expect(templateString) { text }
-                expect(17) { start }
-                expect(18) { end }
-                expect("*") { toString() }
+                shouldBeType<TextElement>()
+                text shouldBe templateString
+                start shouldBe 17
+                end shouldBe 18
+                toString() shouldBe "*"
             }
             with(this[3]) {
-                assertIs<ExpressionElement>(this)
+                shouldBeType<ExpressionElement>()
                 with(variableReferences) {
-                    expect(1) { size }
-                    expect("var_1") { this[0].name }
+                    size shouldBe 1
+                    this[0].name shouldBe "var_1"
                 }
-                expect("{var_1}") { toString() }
+                toString() shouldBe "{var_1}"
             }
             with(this[4]) {
-                assertIs<TextElement>(this)
-                expect(templateString) { text }
-                expect(25) { start }
-                expect(33) { end }
-                expect("(suffix)") { toString() }
+                shouldBeType<TextElement>()
+                text shouldBe templateString
+                start shouldBe 25
+                end shouldBe 33
+                toString() shouldBe "(suffix)"
             }
         }
     }
@@ -221,45 +220,45 @@ class URITemplateTest {
     @Test fun `should allow dots in variable names`() {
         val uriTemplate = URITemplate("{a.b}")
         with(uriTemplate.elements) {
-            expect(1) { size }
+            size shouldBe 1
             with(this[0]) {
-                assertIs<ExpressionElement>(this)
+                shouldBeType<ExpressionElement>()
                 with(variableReferences) {
-                    expect(1) { size }
-                    expect("a.b") { this[0].name }
+                    size shouldBe 1
+                    this[0].name shouldBe "a.b"
                 }
-                expect("{a.b}") { toString() }
+                toString() shouldBe "{a.b}"
             }
         }
     }
 
     @Test fun `should not allow dots in incorrect positions in variable names`() {
-        assertFailsWith<URITemplateException> { URITemplate("{x,.a}") }.let {
-            expect("Illegal dot in variable name at offset 3") { it.message }
+        shouldThrow<URITemplateException>("Illegal dot in variable name at offset 3") {
+            URITemplate("{x,.a}")
         }
-        assertFailsWith<URITemplateException> { URITemplate("{a..b}") }.let {
-            expect("Illegal dot in variable name at offset 3") { it.message }
+        shouldThrow<URITemplateException>("Illegal dot in variable name at offset 3") {
+            URITemplate("{a..b}")
         }
-        assertFailsWith<URITemplateException> { URITemplate("{a.}") }.let {
-            expect("Illegal dot in variable name at offset 2") { it.message }
+        shouldThrow<URITemplateException>("Illegal dot in variable name at offset 2") {
+            URITemplate("{a.}")
         }
     }
 
     @Test fun `should throw exception on illegal character in variable name`() {
-        assertFailsWith<URITemplateException> { URITemplate("(prefix){var-1}(suffix)") }.let {
-            expect("Illegal character in variable at offset 12") { it.message }
+        shouldThrow<URITemplateException>("Illegal character in variable at offset 12") {
+            URITemplate("(prefix){var-1}(suffix)")
         }
     }
 
     @Test fun `should throw exception on empty expression`() {
-        assertFailsWith<URITemplateException> { URITemplate("(prefix){}(suffix)") }.let {
-            expect("Variable name is empty at offset 9") { it.message }
+        shouldThrow<URITemplateException>("Variable name is empty at offset 9") {
+            URITemplate("(prefix){}(suffix)")
         }
     }
 
     @Test fun `should throw exception on expression with no closing brace`() {
-        assertFailsWith<URITemplateException> { URITemplate("(prefix){var") }.let {
-            expect("Missing end of expression (\"}\")") { it.message }
+        shouldThrow<URITemplateException>("Missing end of expression (\"}\")") {
+            URITemplate("(prefix){var")
         }
     }
 
@@ -268,37 +267,37 @@ class URITemplateTest {
         val uriTemplate = URITemplate(templateString)
         with(uriTemplate) {
             with(elements) {
-                expect(3) { size }
+                size shouldBe 3
                 with(this[0]) {
-                    assertIs<TextElement>(this)
-                    expect(templateString) { text }
-                    expect(0) { start }
-                    expect(8) { end }
-                    expect("(prefix)") { toString() }
+                    shouldBeType<TextElement>()
+                    text shouldBe templateString
+                    start shouldBe 0
+                    end shouldBe 8
+                    toString() shouldBe "(prefix)"
                 }
                 with(this[1]) {
-                    assertIs<ExpressionElement>(this)
+                    shouldBeType<ExpressionElement>()
                     with(variableReferences) {
-                        expect(1) { size }
+                        size shouldBe 1
                         with(this[0]) {
-                            expect("var") { name }
-                            assertNull(characterLimit)
-                            assertFalse(explode)
+                            name shouldBe "var"
+                            characterLimit shouldBe null
+                            explode shouldBe false
                         }
                     }
-                    assertTrue(reservedEncoding)
-                    assertNull(prefix)
-                    expect(',') { separator }
-                    assertFalse(addVariableNames)
-                    assertFalse(formsStyleEqualsSign)
-                    expect("{+var}") { toString() }
+                    reservedEncoding shouldBe true
+                    prefix shouldBe null
+                    separator shouldBe ','
+                    addVariableNames shouldBe false
+                    formsStyleEqualsSign shouldBe false
+                    toString() shouldBe "{+var}"
                 }
                 with(this[2]) {
-                    assertIs<TextElement>(this)
-                    expect(templateString) { text }
-                    expect(14) { start }
-                    expect(22) { end }
-                    expect("(suffix)") { toString() }
+                    shouldBeType<TextElement>()
+                    text shouldBe templateString
+                    start shouldBe 14
+                    end shouldBe 22
+                    toString() shouldBe "(suffix)"
                 }
             }
         }
@@ -313,37 +312,37 @@ class URITemplateTest {
         val uriTemplate = URITemplate(templateString)
         with(uriTemplate) {
             with(elements) {
-                expect(3) { size }
+                size shouldBe 3
                 with(this[0]) {
-                    assertIs<TextElement>(this)
-                    expect(templateString) { text }
-                    expect(0) { start }
-                    expect(8) { end }
-                    expect("(prefix)") { toString() }
+                    shouldBeType<TextElement>()
+                    text shouldBe templateString
+                    start shouldBe 0
+                    end shouldBe 8
+                    toString() shouldBe "(prefix)"
                 }
                 with(this[1]) {
-                    assertIs<ExpressionElement>(this)
+                    shouldBeType<ExpressionElement>()
                     with(variableReferences) {
-                        expect(1) { size }
+                        size shouldBe 1
                         with(this[0]) {
-                            expect("var") { name }
-                            assertNull(characterLimit)
-                            assertFalse(explode)
+                            name shouldBe "var"
+                            characterLimit shouldBe null
+                            explode shouldBe false
                         }
                     }
-                    assertTrue(reservedEncoding)
-                    expect('#') { prefix }
-                    expect(',') { separator }
-                    assertFalse(addVariableNames)
-                    assertFalse(formsStyleEqualsSign)
-                    expect("{#var}") { toString() }
+                    reservedEncoding shouldBe true
+                    prefix shouldBe '#'
+                    separator shouldBe ','
+                    addVariableNames shouldBe false
+                    formsStyleEqualsSign shouldBe false
+                    toString() shouldBe "{#var}"
                 }
                 with(this[2]) {
-                    assertIs<TextElement>(this)
-                    expect(templateString) { text }
-                    expect(14) { start }
-                    expect(22) { end }
-                    expect("(suffix)") { toString() }
+                    shouldBeType<TextElement>()
+                    text shouldBe templateString
+                    start shouldBe 14
+                    end shouldBe 22
+                    toString() shouldBe "(suffix)"
                 }
             }
         }
@@ -358,42 +357,42 @@ class URITemplateTest {
         val uriTemplate = URITemplate(templateString)
         with(uriTemplate) {
             with(elements) {
-                expect(3) { size }
+                size shouldBe 3
                 with(this[0]) {
-                    assertIs<TextElement>(this)
-                    expect(templateString) { text }
-                    expect(0) { start }
-                    expect(8) { end }
-                    expect("(prefix)") { toString() }
+                    shouldBeType<TextElement>()
+                    text shouldBe templateString
+                    start shouldBe 0
+                    end shouldBe 8
+                    toString() shouldBe "(prefix)"
                 }
                 with(this[1]) {
-                    assertIs<ExpressionElement>(this)
+                    shouldBeType<ExpressionElement>()
                     with(variableReferences) {
-                        expect(2) { size }
+                        size shouldBe 2
                         with(this[0]) {
-                            expect("var1") { name }
-                            assertNull(characterLimit)
-                            assertFalse(explode)
+                            name shouldBe "var1"
+                            characterLimit shouldBe null
+                            explode shouldBe false
                         }
                         with(this[1]) {
-                            expect("var2") { name }
-                            assertNull(characterLimit)
-                            assertFalse(explode)
+                            name shouldBe "var2"
+                            characterLimit shouldBe null
+                            explode shouldBe false
                         }
                     }
-                    assertFalse(reservedEncoding)
-                    assertNull(prefix)
-                    expect(',') { separator }
-                    assertFalse(addVariableNames)
-                    assertFalse(formsStyleEqualsSign)
-                    expect("{var1,var2}") { toString() }
+                    reservedEncoding shouldBe false
+                    prefix shouldBe null
+                    separator shouldBe ','
+                    addVariableNames shouldBe false
+                    formsStyleEqualsSign shouldBe false
+                    toString() shouldBe "{var1,var2}"
                 }
                 with(this[2]) {
-                    assertIs<TextElement>(this)
-                    expect(templateString) { text }
-                    expect(19) { start }
-                    expect(27) { end }
-                    expect("(suffix)") { toString() }
+                    shouldBeType<TextElement>()
+                    text shouldBe templateString
+                    start shouldBe 19
+                    end shouldBe 27
+                    toString() shouldBe "(suffix)"
                 }
             }
         }
@@ -401,7 +400,7 @@ class URITemplateTest {
 
     @Test fun `should expand template with multiple-variable expression`() {
         shouldConvert("(prefix){var1,var2}(suffix)" to "(prefix)alpha,beta(suffix)",
-                mapOf( "var1" to "alpha", "var2" to "beta"))
+            mapOf( "var1" to "alpha", "var2" to "beta"))
     }
 
     @Test fun `should create template with variable with character limit`() {
@@ -409,51 +408,51 @@ class URITemplateTest {
         val uriTemplate = URITemplate(templateString)
         with(uriTemplate) {
             with(elements) {
-                expect(3) { size }
+                size shouldBe 3
                 with(this[0]) {
-                    assertIs<TextElement>(this)
-                    expect(templateString) { text }
-                    expect(0) { start }
-                    expect(8) { end }
-                    expect("(prefix)") { toString() }
+                    shouldBeType<TextElement>()
+                    text shouldBe templateString
+                    start shouldBe 0
+                    end shouldBe 8
+                    toString() shouldBe "(prefix)"
                 }
                 with(this[1]) {
-                    assertIs<ExpressionElement>(this)
+                    shouldBeType<ExpressionElement>()
                     with(variableReferences) {
-                        expect(1) { size }
+                        size shouldBe 1
                         with(this[0]) {
-                            expect("var") { name }
-                            expect(3) { characterLimit }
-                            assertFalse(explode)
+                            name shouldBe "var"
+                            characterLimit shouldBe 3
+                            explode shouldBe false
                         }
                     }
-                    assertFalse(reservedEncoding)
-                    assertNull(prefix)
-                    expect(',') { separator }
-                    assertFalse(addVariableNames)
-                    assertFalse(formsStyleEqualsSign)
-                    expect("{var:3}") { toString() }
+                    reservedEncoding shouldBe false
+                    prefix shouldBe null
+                    separator shouldBe ','
+                    addVariableNames shouldBe false
+                    formsStyleEqualsSign shouldBe false
+                    toString() shouldBe "{var:3}"
                 }
                 with(this[2]) {
-                    assertIs<TextElement>(this)
-                    expect(templateString) { text }
-                    expect(15) { start }
-                    expect(23) { end }
-                    expect("(suffix)") { toString() }
+                    shouldBeType<TextElement>()
+                    text shouldBe templateString
+                    start shouldBe 15
+                    end shouldBe 23
+                    toString() shouldBe "(suffix)"
                 }
             }
         }
     }
 
     @Test fun `should throw exception on illegal character limit`() {
-        assertFailsWith<URITemplateException> { URITemplate("{var:a}") }.let {
-            expect("Character limit colon not followed by number at offset 5") { it.message }
+        shouldThrow<URITemplateException>("Character limit colon not followed by number at offset 5") {
+            URITemplate("{var:a}")
         }
-        assertFailsWith<URITemplateException> { URITemplate("{var:99999}") }.let {
-            expect("Character limit too high (99999) at offset 5") { it.message }
+        shouldThrow<URITemplateException>("Character limit too high (99999) at offset 5") {
+            URITemplate("{var:99999}")
         }
-        assertFailsWith<URITemplateException> { URITemplate("{var:999999999999999}") }.let {
-            expect("Illegal number (999999999999999) at offset 5") { it.message }
+        shouldThrow<URITemplateException>("Illegal number (999999999999999) at offset 5") {
+            URITemplate("{var:999999999999999}")
         }
     }
 
@@ -462,45 +461,45 @@ class URITemplateTest {
         val uriTemplate = URITemplate(templateString)
         with(uriTemplate) {
             with(elements) {
-                expect(3) { size }
+                size shouldBe 3
                 with(this[0]) {
-                    assertIs<TextElement>(this)
-                    expect(templateString) { text }
-                    expect(0) { start }
-                    expect(8) { end }
-                    expect("(prefix)") { toString() }
+                    shouldBeType<TextElement>()
+                    text shouldBe templateString
+                    start shouldBe 0
+                    end shouldBe 8
+                    toString() shouldBe "(prefix)"
                 }
                 with(this[1]) {
-                    assertIs<ExpressionElement>(this)
+                    shouldBeType<ExpressionElement>()
                     with(variableReferences) {
-                        expect(1) { size }
+                        size shouldBe 1
                         with(this[0]) {
-                            expect("var") { name }
-                            assertNull(characterLimit)
-                            assertTrue(explode)
+                            name shouldBe "var"
+                            characterLimit shouldBe null
+                            explode shouldBe true
                         }
                     }
-                    assertFalse(reservedEncoding)
-                    assertNull(prefix)
-                    expect(',') { separator }
-                    assertFalse(addVariableNames)
-                    assertFalse(formsStyleEqualsSign)
-                    expect("{var*}") { toString() }
+                    reservedEncoding shouldBe false
+                    prefix shouldBe null
+                    separator shouldBe ','
+                    addVariableNames shouldBe false
+                    formsStyleEqualsSign shouldBe false
+                    toString() shouldBe "{var*}"
                 }
                 with(this[2]) {
-                    assertIs<TextElement>(this)
-                    expect(templateString) { text }
-                    expect(14) { start }
-                    expect(22) { end }
-                    expect("(suffix)") { toString() }
+                    shouldBeType<TextElement>()
+                    text shouldBe templateString
+                    start shouldBe 14
+                    end shouldBe 22
+                    toString() shouldBe "(suffix)"
                 }
             }
         }
     }
 
     @Test fun `should throw exception on illegal explode modifier`() {
-        assertFailsWith<URITemplateException> { URITemplate("{var*a}") }.let {
-            expect("Explode indicator not followed by ',' or '}' at offset 5") { it.message }
+        shouldThrow<URITemplateException>("Explode indicator not followed by ',' or '}' at offset 5") {
+            URITemplate("{var*a}")
         }
     }
 
@@ -539,9 +538,9 @@ class URITemplateTest {
         shouldConvert("http://example.com/~{username}/" to "http://example.com/~mark/", mapOf("username" to "mark"))
 
         shouldConvert("http://example.com/dictionary/{term:1}/{term}" to "http://example.com/dictionary/c/cat",
-                mapOf("term" to "cat"))
+            mapOf("term" to "cat"))
         shouldConvert("http://example.com/dictionary/{term:1}/{term}" to "http://example.com/dictionary/d/dog",
-                mapOf("term" to "dog"))
+            mapOf("term" to "dog"))
 
         shouldConvert("http://example.com/search{?q,lang}" to "http://example.com/search?q=cat&lang=en", mapOf(
             "q" to "cat",
@@ -674,7 +673,7 @@ class URITemplateTest {
             )
         ))
         shouldConvert("find{?year*}" to "find?year=1965&year=2000&year=2012",
-                mapOf("year" to listOf("1965", "2000", "2012")))
+            mapOf("year" to listOf("1965", "2000", "2012")))
         shouldConvert("www{.dom*}" to "www.example.com", mapOf("dom" to listOf("example", "com")))
     }
 
@@ -827,17 +826,17 @@ class URITemplateTest {
 
     private fun shouldConvert(pair: Pair<String, String>) {
         val uriTemplate = URITemplate(pair.first)
-        expect(pair.second) { uriTemplate.expand() }
+        uriTemplate.expand() shouldBe pair.second
     }
 
     private fun shouldConvert(pair: Pair<String, String>, resolver: VariableResolver) {
         val uriTemplate = URITemplate(pair.first)
-        expect(pair.second) { uriTemplate.expand(resolver) }
+        uriTemplate.expand(resolver) shouldBe pair.second
     }
 
     private fun shouldConvert(pair: Pair<String, String>, values: Map<String, Any?>) {
         val uriTemplate = URITemplate(pair.first)
-        expect(pair.second) { uriTemplate.expand(values) }
+        uriTemplate.expand(values) shouldBe pair.second
     }
 
     private val parameterValueMap = mapOf(

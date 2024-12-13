@@ -26,12 +26,10 @@
 package io.kjson.uritemplate
 
 import kotlin.test.Test
-import kotlin.test.assertFalse
-import kotlin.test.assertIs
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
-import kotlin.test.expect
+
+import io.kstuff.test.shouldBe
+import io.kstuff.test.shouldBeNonNull
+import io.kstuff.test.shouldBeType
 
 import io.kjson.uritemplate.ExpressionElement.Companion.getIterator
 
@@ -40,93 +38,93 @@ class ExpressionElementTest {
     @Test fun `should return iterator for List`() {
         val list = listOf("cat", "dog", "horse")
         val iterator = list.getIterator()
-        assertNotNull(iterator)
-        assertTrue(iterator.hasNext())
-        expect("cat") { iterator.next() }
-        assertTrue(iterator.hasNext())
-        expect("dog") { iterator.next() }
-        assertTrue(iterator.hasNext())
-        expect("horse") { iterator.next() }
-        assertFalse(iterator.hasNext())
+        iterator.shouldBeNonNull()
+        iterator.hasNext() shouldBe true
+        iterator.next() shouldBe "cat"
+        iterator.hasNext() shouldBe true
+        iterator.next() shouldBe "dog"
+        iterator.hasNext() shouldBe true
+        iterator.next() shouldBe "horse"
+        iterator.hasNext() shouldBe false
     }
 
     @Test fun `should return iterator for Map`() {
         val map = mapOf("Fred" to "cat", "Mary" to "dog", "Janet" to "horse")
         // relies on mapOf using LinkedHashMap to retain order
         val iterator = map.getIterator()
-        assertNotNull(iterator)
-        assertTrue(iterator.hasNext())
+        iterator.shouldBeNonNull()
+        iterator.hasNext() shouldBe true
         with(iterator.next()) {
-            assertIs<Map.Entry<*, *>>(this)
-            expect("Fred") { key }
-            expect("cat") { value }
+            shouldBeType<Map.Entry<*, *>>()
+            key shouldBe "Fred"
+            value shouldBe "cat"
         }
-        assertTrue(iterator.hasNext())
+        iterator.hasNext() shouldBe true
         with(iterator.next()) {
-            assertIs<Map.Entry<*, *>>(this)
-            expect("Mary") { key }
-            expect("dog") { value }
+            shouldBeType<Map.Entry<*, *>>()
+            key shouldBe "Mary"
+            value shouldBe "dog"
         }
-        assertTrue(iterator.hasNext())
+        iterator.hasNext() shouldBe true
         with(iterator.next()) {
-            assertIs<Map.Entry<*, *>>(this)
-            expect("Janet") { key }
-            expect("horse") { value }
+            shouldBeType<Map.Entry<*, *>>()
+            key shouldBe "Janet"
+            value shouldBe "horse"
         }
-        assertFalse(iterator.hasNext())
+        iterator.hasNext() shouldBe false
     }
 
     @Test fun `should return iterator for Pair`() {
         val pair = "sheep" to "goat"
         val iterator = pair.getIterator()
-        assertNotNull(iterator)
-        assertTrue(iterator.hasNext())
-        expect("sheep") { iterator.next() }
-        assertTrue(iterator.hasNext())
-        expect("goat") { iterator.next() }
-        assertFalse(iterator.hasNext())
+        iterator.shouldBeNonNull()
+        iterator.hasNext() shouldBe true
+        iterator.next() shouldBe "sheep"
+        iterator.hasNext() shouldBe true
+        iterator.next() shouldBe "goat"
+        iterator.hasNext() shouldBe false
     }
 
     @Test fun `should return iterator for Triple`() {
         val triple = Triple("sheep", "goat", "pig")
         val iterator = triple.getIterator()
-        assertNotNull(iterator)
-        assertTrue(iterator.hasNext())
-        expect("sheep") { iterator.next() }
-        assertTrue(iterator.hasNext())
-        expect("goat") { iterator.next() }
-        assertTrue(iterator.hasNext())
-        expect("pig") { iterator.next() }
-        assertFalse(iterator.hasNext())
+        iterator.shouldBeNonNull()
+        iterator.hasNext() shouldBe true
+        iterator.next() shouldBe "sheep"
+        iterator.hasNext() shouldBe true
+        iterator.next() shouldBe "goat"
+        iterator.hasNext() shouldBe true
+        iterator.next() shouldBe "pig"
+        iterator.hasNext() shouldBe false
     }
 
     @Test fun `should return iterator for Map Entry`() {
         val map = mapOf("Fred" to "cat")
         val iterator = map.entries.first().getIterator()
-        assertNotNull(iterator)
-        assertTrue(iterator.hasNext())
-        expect("Fred") { iterator.next() }
-        assertTrue(iterator.hasNext())
-        expect("cat") { iterator.next() }
-        assertFalse(iterator.hasNext())
+        iterator.shouldBeNonNull()
+        iterator.hasNext() shouldBe true
+        iterator.next() shouldBe "Fred"
+        iterator.hasNext() shouldBe true
+        iterator.next() shouldBe "cat"
+        iterator.hasNext() shouldBe false
     }
 
     @Test fun `should return iterator for Array`() {
         val array = arrayOf("cat", "dog", "horse")
         val iterator = array.getIterator()
-        assertNotNull(iterator)
-        assertTrue(iterator.hasNext())
-        expect("cat") { iterator.next() }
-        assertTrue(iterator.hasNext())
-        expect("dog") { iterator.next() }
-        assertTrue(iterator.hasNext())
-        expect("horse") { iterator.next() }
-        assertFalse(iterator.hasNext())
+        iterator.shouldBeNonNull()
+        iterator.hasNext() shouldBe true
+        iterator.next() shouldBe "cat"
+        iterator.hasNext() shouldBe true
+        iterator.next() shouldBe "dog"
+        iterator.hasNext() shouldBe true
+        iterator.next() shouldBe "horse"
+        iterator.hasNext() shouldBe false
     }
 
     @Test fun `should return null iterator for String`() {
         val string = "should return null"
-        assertNull(string.getIterator())
+        string.getIterator() shouldBe null
     }
 
 }

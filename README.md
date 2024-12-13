@@ -165,25 +165,25 @@ specified in all cases.
 
 ## Dependency Specification
 
-The latest version of the library is 4.0, and it may be obtained from the Maven Central repository.
+The latest version of the library is 4.1, and it may be obtained from the Maven Central repository.
 
 ### Maven
 ```xml
     <dependency>
       <groupId>io.kjson</groupId>
       <artifactId>uri-template</artifactId>
-      <version>4.0</version>
+      <version>4.1</version>
     </dependency>
 ```
 ### Gradle
 ```groovy
-    implementation 'io.kjson:uri-template:4.0'
+    implementation 'io.kjson:uri-template:4.1'
 ```
 ### Gradle (kts)
 ```kotlin
-    implementation("io.kjson:uri-template:4.0")
+    implementation("io.kjson:uri-template:4.1")
 ```
 
 Peter Wall
 
-2024-10-25
+2024-12-13

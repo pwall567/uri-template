@@ -2,6 +2,11 @@
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+## [4.1] - 2024-12-13
+### Changed
+- `pom.xml`: updated dependency version
+- tests : switched to `should-test` library
+
 ## [4.0] - 2024-10-25
 ### Added
 - `VariableReference`: to allow modifiers to be added to each use of a variable individually

@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>uri-template</artifactId>
-  <version>4.0</version>
+  <version>4.1</version>
   <name>Kotlin implementation of URI Template</name>
   <packaging>jar</packaging>
   <url>https://github.com/pwall567/uri-template</url>
@@ -81,7 +81,13 @@
     <dependency>
       <groupId>io.kjson</groupId>
       <artifactId>kjson-core</artifactId>
-      <version>9.1</version>
+      <version>9.2</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.kstuff</groupId>
+      <artifactId>should-test</artifactId>
+      <version>4.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
