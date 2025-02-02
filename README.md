@@ -2,7 +2,7 @@
 
 [![Build Status](https://github.com/pwall567/uri-template/actions/workflows/build.yml/badge.svg)](https://github.com/pwall567/uri-template/actions/workflows/build.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Kotlin](https://img.shields.io/static/v1?label=Kotlin&message=v1.9.24&color=7f52ff&logo=kotlin&logoColor=7f52ff)](https://github.com/JetBrains/kotlin/releases/tag/v1.9.24)
+[![Kotlin](https://img.shields.io/static/v1?label=Kotlin&message=v2.0.21&color=7f52ff&logo=kotlin&logoColor=7f52ff)](https://github.com/JetBrains/kotlin/releases/tag/v2.0.21)
 [![Maven Central](https://img.shields.io/maven-central/v/io.kjson/uri-template?label=Maven%20Central)](https://search.maven.org/search?q=g:%22io.kjson%22%20AND%20a:%uri-template%22)
 
 Kotlin implementation of [URI Template](https://www.rfc-editor.org/rfc/rfc6570.html).
@@ -165,25 +165,25 @@ specified in all cases.
 
 ## Dependency Specification
 
-The latest version of the library is 4.1, and it may be obtained from the Maven Central repository.
+The latest version of the library is 4.2, and it may be obtained from the Maven Central repository.
 
 ### Maven
 ```xml
     <dependency>
       <groupId>io.kjson</groupId>
       <artifactId>uri-template</artifactId>
-      <version>4.1</version>
+      <version>4.2</version>
     </dependency>
 ```
 ### Gradle
 ```groovy
-    implementation 'io.kjson:uri-template:4.1'
+    implementation 'io.kjson:uri-template:4.2'
 ```
 ### Gradle (kts)
 ```kotlin
-    implementation("io.kjson:uri-template:4.1")
+    implementation("io.kjson:uri-template:4.2")
 ```
 
 Peter Wall
 
-2024-12-13
+2025-02-02

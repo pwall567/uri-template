@@ -25,7 +25,7 @@
 
 package io.kjson.uritemplate
 
-import net.pwall.text.TextMatcher
+import io.jstuff.text.TextMatcher
 
 /**
  * An exception class for the URI Template library.

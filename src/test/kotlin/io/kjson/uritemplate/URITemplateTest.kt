@@ -31,8 +31,9 @@ import io.kstuff.test.shouldBe
 import io.kstuff.test.shouldBeType
 import io.kstuff.test.shouldThrow
 
+import io.kstuff.text.UTF8StringMapper.encodeUTF8
+
 import io.kjson.uritemplate.ExpressionElement.Companion.encodeSimple
-import net.pwall.text.UTF8StringMapper.encodeUTF8
 
 class URITemplateTest {
 

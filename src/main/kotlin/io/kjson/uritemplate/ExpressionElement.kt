@@ -25,10 +25,10 @@
 
 package io.kjson.uritemplate
 
-import net.pwall.text.StringMapper.mapCharacters
-import net.pwall.text.URIStringMapper.isUnreservedForURI
-import net.pwall.text.UTF8StringMapper.encodeUTF8
-import net.pwall.util.IntOutput.append2Hex
+import io.jstuff.util.IntOutput.append2Hex
+import io.kstuff.text.StringMapper.mapCharacters
+import io.kstuff.text.URIStringMapper.isUnreservedForURI
+import io.kstuff.text.UTF8StringMapper.encodeUTF8
 
 class ExpressionElement(
     val variableReferences: List<VariableReference>,

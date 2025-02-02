@@ -25,7 +25,7 @@
 
 package io.kjson.uritemplate
 
-import net.pwall.text.TextMatcher
+import io.jstuff.text.TextMatcher
 
 /**
  * Kotlin implementation of the [URI Template](https://www.rfc-editor.org/rfc/rfc6570.html) specification.
