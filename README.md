@@ -3,7 +3,7 @@
 [![Build Status](https://github.com/pwall567/uri-template/actions/workflows/build.yml/badge.svg)](https://github.com/pwall567/uri-template/actions/workflows/build.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Kotlin](https://img.shields.io/static/v1?label=Kotlin&message=v2.0.21&color=7f52ff&logo=kotlin&logoColor=7f52ff)](https://github.com/JetBrains/kotlin/releases/tag/v2.0.21)
-[![Maven Central](https://img.shields.io/maven-central/v/io.kjson/uri-template?label=Maven%20Central)](https://search.maven.org/search?q=g:%22io.kjson%22%20AND%20a:%uri-template%22)
+[![Maven Central](https://img.shields.io/maven-central/v/io.kjson/uri-template?label=Maven%20Central)](https://central.sonatype.com/artifact/io.kjson/uri-template)
 
 Kotlin implementation of [URI Template](https://www.rfc-editor.org/rfc/rfc6570.html).
 
@@ -92,7 +92,8 @@ The `message` property of the exception object will contain a useful explanatory
 `TextMatcher` object (see the [`textmatcher`](https://github.com/pwall567/textmatcher) project) will provide details of
 location of the error in the input string, where relevant.
 
-The `URITemplateException` exposes the following properties:
+The `URITemplateException` is a derived class of `RuntimeException`.
+It exposes the following properties:
 
 | Name      | Type           | Notes                                                                         |
 |-----------|----------------|-------------------------------------------------------------------------------|
@@ -165,25 +166,25 @@ specified in all cases.
 
 ## Dependency Specification
 
-The latest version of the library is 4.2, and it may be obtained from the Maven Central repository.
+The latest version of the library is 4.3, and it may be obtained from the Maven Central repository.
 
 ### Maven
 ```xml
     <dependency>
       <groupId>io.kjson</groupId>
       <artifactId>uri-template</artifactId>
-      <version>4.2</version>
+      <version>4.3</version>
     </dependency>
 ```
 ### Gradle
 ```groovy
-    implementation 'io.kjson:uri-template:4.2'
+    implementation 'io.kjson:uri-template:4.3'
 ```
 ### Gradle (kts)
 ```kotlin
-    implementation("io.kjson:uri-template:4.2")
+    implementation("io.kjson:uri-template:4.3")
 ```
 
 Peter Wall
 
-2025-02-02
+2025-06-29
